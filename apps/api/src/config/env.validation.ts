@@ -10,6 +10,12 @@ export const envSchema = z.object({
   API_HOST: z.string().min(1).default('0.0.0.0'),
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url().optional(),
+  JWT_ACCESS_SECRET: z.string().min(16),
+  JWT_REFRESH_SECRET: z.string().min(16),
+  // Access-token lifetime in seconds (default 15 minutes).
+  JWT_ACCESS_TTL: z.coerce.number().int().positive().default(900),
+  // Refresh-token lifetime in seconds (default 14 days).
+  JWT_REFRESH_TTL: z.coerce.number().int().positive().default(1209600),
 });
 
 export type Env = z.infer<typeof envSchema>;
