@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './config/env.validation';
+import { AiModule } from './ai/ai.module';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -20,6 +21,7 @@ import { StorageModule } from './storage/storage.module';
     PrismaModule,
     StorageModule,
     SecurityModule,
+    AiModule,
     AuthModule,
     ResumesModule,
     HealthModule,

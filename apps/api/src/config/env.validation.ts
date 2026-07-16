@@ -28,6 +28,15 @@ export const envSchema = z.object({
     .int()
     .positive()
     .default(10 * 1024 * 1024),
+  // AI providers (provider abstraction). Keys are optional so the app boots
+  // without them; a provider only fails when actually invoked without a key.
+  AI_DEFAULT_PROVIDER: z.enum(['openai', 'anthropic', 'gemini']).default('openai'),
+  AI_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(30000),
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
+  OPENAI_MODEL: z.string().min(1).default('gpt-4o-mini'),
+  ANTHROPIC_API_KEY: z.string().optional(),
+  GEMINI_API_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
