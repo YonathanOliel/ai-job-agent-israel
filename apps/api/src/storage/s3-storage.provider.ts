@@ -56,16 +56,12 @@ export class S3StorageProvider implements StorageProvider, OnModuleInit {
   }
 
   async getStream(key: string): Promise<Readable> {
-    const result = await this.client.send(
-      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
-    );
+    const result = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
     return result.Body as Readable;
   }
 
   async getBuffer(key: string): Promise<Buffer> {
-    const result = await this.client.send(
-      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
-    );
+    const result = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
     const bytes = await result.Body!.transformToByteArray();
     return Buffer.from(bytes);
   }

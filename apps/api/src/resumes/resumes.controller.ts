@@ -16,6 +16,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/jwt-payload.type';
+import { ResumeParsingService } from './parsing/resume-parsing.service';
+import type { ResumeParseResult } from './parsing/resume-parse-result.type';
 import { ResumesService } from './resumes.service';
 import type { ResumeSummary } from './types/resume.types';
 
@@ -25,7 +27,10 @@ const MULTER_HARD_LIMIT_BYTES = 15 * 1024 * 1024;
 
 @Controller('resumes')
 export class ResumesController {
-  constructor(private readonly resumes: ResumesService) {}
+  constructor(
+    private readonly resumes: ResumesService,
+    private readonly parsing: ResumeParsingService,
+  ) {}
 
   @Post()
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MULTER_HARD_LIMIT_BYTES } }))
@@ -45,6 +50,14 @@ export class ResumesController {
   @Get()
   list(@CurrentUser() user: AuthenticatedUser): Promise<ResumeSummary[]> {
     return this.resumes.list(user.id);
+  }
+
+  @Post(':id/parse')
+  parse(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ResumeParseResult> {
+    return this.parsing.parse(user.id, id);
   }
 
   @Get(':id/download')

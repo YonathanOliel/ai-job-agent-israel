@@ -26,7 +26,8 @@ documentation updated, and a Git commit is created.
 | 1   | `feature/infra-db`           | Docker infra (Postgres/Redis/storage), Prisma schema + migrations | ✅ Done |
 | 2   | `feature/authentication`     | Register/login, JWT access+refresh, RBAC, audit logs              | ✅ Done |
 | 3   | `feature/resume-upload`      | Secure upload, object storage, malware-scan hook, validation      | ✅ Done |
-| 4   | `feature/resume-parser`      | AI extraction → structured Career Profile                         | ⬜      |
+| 4   | `feature/resume-parser`      | Resume text extraction (PDF/DOCX/TXT) + language detection        | ✅ Done |
+| 4b  | `feature/career-profile`     | AI extraction → structured Career Profile (AI provider layer)     | ⬜      |
 | 5   | `feature/ai-matching-engine` | Semantic matching + explainable multi-dimension scores            | ⬜      |
 | 6   | `feature/job-sources`        | Compliant job-source ingestion abstraction + adapters             | ⬜      |
 | 7   | `feature/dashboard`          | Premium Hebrew-first RTL dashboard                                | ⬜      |
