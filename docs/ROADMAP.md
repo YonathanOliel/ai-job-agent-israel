@@ -25,7 +25,7 @@ documentation updated, and a Git commit is created.
 | 0   | `chore/foundation`           | Monorepo scaffold, tooling, docs, CI skeleton                     | ✅ Done |
 | 1   | `feature/infra-db`           | Docker infra (Postgres/Redis/storage), Prisma schema + migrations | ✅ Done |
 | 2   | `feature/authentication`     | Register/login, JWT access+refresh, RBAC, audit logs              | ✅ Done |
-| 3   | `feature/resume-upload`      | Secure upload, object storage, malware-scan hook, validation      | ⬜      |
+| 3   | `feature/resume-upload`      | Secure upload, object storage, malware-scan hook, validation      | ✅ Done |
 | 4   | `feature/resume-parser`      | AI extraction → structured Career Profile                         | ⬜      |
 | 5   | `feature/ai-matching-engine` | Semantic matching + explainable multi-dimension scores            | ⬜      |
 | 6   | `feature/job-sources`        | Compliant job-source ingestion abstraction + adapters             | ⬜      |
