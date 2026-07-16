@@ -37,7 +37,7 @@ Thumbs.db
 prisma/*.db
 prisma/*.db-journal
 
-# Uploads / local storage
-uploads/
-tmp/
-storage/
+# Uploads / local storage (root-level only; must not match src/storage code)
+/uploads/
+/tmp/
+/storage/
