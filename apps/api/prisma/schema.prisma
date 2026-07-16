@@ -78,6 +78,14 @@ enum MatchStatus {
   DISMISSED
 }
 
+enum AuditAction {
+  USER_REGISTERED
+  LOGIN_SUCCEEDED
+  LOGIN_FAILED
+  TOKEN_REFRESHED
+  LOGOUT
+}
+
 // --------------------------------------------------------------------------
 // Models
 // --------------------------------------------------------------------------
@@ -95,6 +103,8 @@ model User {
   resumes       Resume[]
   careerProfile CareerProfile?
   matches       JobMatch[]
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
 
   @@map("users")
 }
@@ -208,4 +218,35 @@ model JobMatch {
   @@index([userId, status])
   @@index([jobId])
   @@map("job_matches")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // SHA-256 hash of the opaque refresh token; the raw value is never stored.
+  tokenHash String    @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model AuditLog {
+  id        String      @id @default(uuid()) @db.Uuid
+  userId    String?     @db.Uuid
+  user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    AuditAction
+  ipAddress String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime    @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@map("audit_logs")
 }
