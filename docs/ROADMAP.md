@@ -28,7 +28,7 @@ documentation updated, and a Git commit is created.
 | 3   | `feature/resume-upload`      | Secure upload, object storage, malware-scan hook, validation      | ✅ Done |
 | 4   | `feature/resume-parser`      | Resume text extraction (PDF/DOCX/TXT) + language detection        | ✅ Done |
 | 4a  | `feature/ai-provider`        | AI provider abstraction (OpenAI impl, config-selected)            | ✅ Done |
-| 4b  | `feature/career-profile`     | AI extraction → structured Career Profile (uses AI provider)      | ⬜      |
+| 4b  | `feature/career-profile`     | AI extraction → structured Career Profile (uses AI provider)      | ✅ Done |
 | 5   | `feature/ai-matching-engine` | Semantic matching + explainable multi-dimension scores            | ⬜      |
 | 6   | `feature/job-sources`        | Compliant job-source ingestion abstraction + adapters             | ⬜      |
 | 7   | `feature/dashboard`          | Premium Hebrew-first RTL dashboard                                | ⬜      |
