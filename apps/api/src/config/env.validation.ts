@@ -37,6 +37,9 @@ export const envSchema = z.object({
   OPENAI_MODEL: z.string().min(1).default('gpt-4o-mini'),
   ANTHROPIC_API_KEY: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
+  // Career-profile extraction strategy. "heuristic" works offline (no API key);
+  // "llm" uses the configured AI provider for richer extraction.
+  PROFILE_EXTRACTOR: z.enum(['heuristic', 'llm']).default('heuristic'),
 });
 
 export type Env = z.infer<typeof envSchema>;
