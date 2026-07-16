@@ -1,0 +1,25 @@
+{
+  "name": "ai-job-agent-israel",
+  "version": "0.0.0",
+  "private": true,
+  "description": "AI Job Agent Israel — a personal AI job-search agent for the Israeli market (Hebrew-first, RTL).",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\""
+  },
+  "devDependencies": {
+    "prettier": "3.4.2",
+    "turbo": "2.3.3",
+    "typescript": "5.7.3"
+  }
+}
