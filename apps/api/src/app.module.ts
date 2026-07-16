@@ -4,6 +4,9 @@ import { validateEnv } from './config/env.validation';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ResumesModule } from './resumes/resumes.module';
+import { SecurityModule } from './security/security.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -15,7 +18,10 @@ import { PrismaModule } from './prisma/prisma.module';
       envFilePath: ['../../.env'],
     }),
     PrismaModule,
+    StorageModule,
+    SecurityModule,
     AuthModule,
+    ResumesModule,
     HealthModule,
   ],
 })
