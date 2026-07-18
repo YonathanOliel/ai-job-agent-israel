@@ -46,6 +46,12 @@ export const envSchema = z.object({
   // Real job source (Remotive public API — no key, returns real apply links).
   REMOTIVE_API_URL: z.string().url().default('https://remotive.com/api/remote-jobs'),
   REMOTIVE_CATEGORY: z.string().default('software-dev'),
+  // Jooble job source — real Israeli listings. Requires a free API key.
+  // When JOOBLE_API_KEY is set, the source is enabled automatically.
+  JOOBLE_API_URL: z.string().url().default('https://jooble.org/api'),
+  JOOBLE_API_KEY: z.string().optional(),
+  JOOBLE_LOCATION: z.string().default('Israel'),
+  JOOBLE_KEYWORDS: z.string().default(''),
   // Max jobs to ingest per source per run.
   JOB_INGEST_LIMIT: z.coerce.number().int().positive().max(200).default(50),
   // Include the built-in sample jobs alongside real sources (dev/testing).

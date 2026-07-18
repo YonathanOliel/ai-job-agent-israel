@@ -5,6 +5,7 @@ import { JOB_SOURCES, type JobSource } from './job-source.types';
 import { JobIngestionService } from './job-ingestion.service';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
+import { JoobleJobSource } from './jooble-job.source';
 import { RemotiveJobSource } from './remotive-job.source';
 import { SeedJobSource } from './seed-job.source';
 
@@ -14,16 +15,22 @@ import { SeedJobSource } from './seed-job.source';
     JobsService,
     JobIngestionService,
     RemotiveJobSource,
+    JoobleJobSource,
     SeedJobSource,
     {
       provide: JOB_SOURCES,
-      inject: [ConfigService, RemotiveJobSource, SeedJobSource],
+      inject: [ConfigService, RemotiveJobSource, JoobleJobSource, SeedJobSource],
       useFactory: (
         config: ConfigService<Env, true>,
         remotive: RemotiveJobSource,
+        jooble: JoobleJobSource,
         seed: SeedJobSource,
       ): JobSource[] => {
         const sources: JobSource[] = [remotive];
+        // Enabled automatically once a free Jooble API key is configured.
+        if (config.get('JOOBLE_API_KEY', { infer: true })) {
+          sources.push(jooble);
+        }
         if (config.get('ENABLE_SEED_JOBS', { infer: true })) {
           sources.push(seed);
         }
