@@ -2,6 +2,7 @@ import type {
   AuthResult,
   CareerProfile,
   GenerateMatchesResult,
+  Job,
   JobMatch,
   MatchStatus,
   Paginated,
@@ -20,6 +21,27 @@ export class ApiError extends Error {
     super(message);
     this.name = 'ApiError';
   }
+}
+
+export interface JobFilters {
+  search?: string;
+  city?: string;
+  technology?: string;
+  seniority?: string;
+  isRemote?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+
+function toQuery(filters: Record<string, string | number | boolean | undefined>): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) {
+    if (value !== undefined && value !== '') {
+      params.set(key, String(value));
+    }
+  }
+  const query = params.toString();
+  return query ? `?${query}` : '';
 }
 
 interface RequestOptions {
@@ -109,6 +131,9 @@ export const api = {
     }),
 
   getProfile: (token: string) => request<CareerProfile>('/career-profile', { token }),
+
+  listJobs: (token: string, filters: JobFilters = {}) =>
+    request<Paginated<Job>>(`/jobs${toQuery({ pageSize: 10, ...filters })}`, { token }),
 
   generateMatches: (token: string) =>
     request<GenerateMatchesResult>('/matches/generate', { method: 'POST', token }),

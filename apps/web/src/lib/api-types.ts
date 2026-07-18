@@ -27,13 +27,17 @@ export interface Job {
   id: string;
   title: string;
   company: string;
+  description: string;
   city: string | null;
   isRemote: boolean;
+  workArrangement: string | null;
+  employmentType: string | null;
   seniority: string | null;
   salaryMin: number | null;
   salaryMax: number | null;
   technologies: string[];
   language: LanguageCode | null;
+  postedAt: string | null;
 }
 
 export interface DimensionScore {
