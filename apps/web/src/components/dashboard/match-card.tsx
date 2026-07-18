@@ -145,6 +145,16 @@ export function MatchCard({ match, token }: { match: JobMatch; token: string }) 
           >
             הסרה
           </Button>
+          {job.sourceUrl && (
+            <a
+              href={job.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-9 items-center rounded-md border border-input px-3 text-sm font-medium hover:bg-secondary"
+            >
+              צפייה במשרה ↗
+            </a>
+          )}
         </div>
       </CardContent>
     </Card>

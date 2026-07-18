@@ -216,6 +216,16 @@ function JobRow({ job }: { job: Job }) {
       </CardHeader>
       <CardContent>
         <p className="line-clamp-2 text-sm text-muted-foreground">{job.description}</p>
+        {job.sourceUrl && (
+          <a
+            href={job.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            צפייה והגשה למשרה ↗
+          </a>
+        )}
       </CardContent>
     </Card>
   );

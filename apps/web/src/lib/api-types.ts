@@ -38,6 +38,7 @@ export interface Job {
   technologies: string[];
   language: LanguageCode | null;
   postedAt: string | null;
+  sourceUrl: string | null;
 }
 
 export interface DimensionScore {
