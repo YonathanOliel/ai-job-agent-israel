@@ -69,3 +69,44 @@ export interface Paginated<T> {
 export interface GenerateMatchesResult extends Paginated<JobMatch> {
   generated: number;
 }
+
+export type ResumeStatus = 'UPLOADED' | 'PARSING' | 'PARSED' | 'FAILED';
+
+export interface Resume {
+  id: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  status: ResumeStatus;
+  language: LanguageCode | null;
+  createdAt: string;
+}
+
+export interface ResumeParseResult {
+  id: string;
+  status: ResumeStatus;
+  language: LanguageCode | null;
+  textLength: number;
+  preview: string;
+}
+
+export interface ProfileLanguage {
+  name: string;
+  proficiency?: string;
+}
+
+export interface CareerProfile {
+  id: string;
+  headline: string | null;
+  summary: string | null;
+  yearsExperience: number | null;
+  seniority: string | null;
+  desiredRoles: string[];
+  skills: string[];
+  technologies: string[];
+  industries: string[];
+  preferredLocations: string[];
+  languages: ProfileLanguage[] | null;
+  createdAt: string;
+  updatedAt: string;
+}

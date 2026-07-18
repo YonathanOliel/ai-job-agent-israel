@@ -1,10 +1,13 @@
 import type {
   AuthResult,
+  CareerProfile,
   GenerateMatchesResult,
   JobMatch,
   MatchStatus,
   Paginated,
   PublicUser,
+  Resume,
+  ResumeParseResult,
 } from './api-types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
@@ -72,6 +75,40 @@ export const api = {
     request<AuthResult>('/auth/login', { method: 'POST', body }),
 
   me: (token: string) => request<PublicUser>('/auth/me', { token }),
+
+  uploadResume: async (token: string, file: File): Promise<Resume> => {
+    const body = new FormData();
+    body.append('file', file);
+    let response: Response;
+    try {
+      response = await fetch(`${API_BASE}/api/resumes`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body,
+      });
+    } catch {
+      throw new ApiError('לא ניתן להתחבר לשרת. ודא שהשרת פועל.', 0);
+    }
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new ApiError(extractMessage(payload) ?? 'העלאת הקובץ נכשלה.', response.status);
+    }
+    return payload as Resume;
+  },
+
+  listResumes: (token: string) => request<Resume[]>('/resumes', { token }),
+
+  parseResume: (token: string, resumeId: string) =>
+    request<ResumeParseResult>(`/resumes/${resumeId}/parse`, { method: 'POST', token }),
+
+  generateProfile: (token: string, resumeId: string) =>
+    request<CareerProfile>('/career-profile/generate', {
+      method: 'POST',
+      body: { resumeId },
+      token,
+    }),
+
+  getProfile: (token: string) => request<CareerProfile>('/career-profile', { token }),
 
   generateMatches: (token: string) =>
     request<GenerateMatchesResult>('/matches/generate', { method: 'POST', token }),
