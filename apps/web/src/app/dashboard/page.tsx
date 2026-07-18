@@ -73,6 +73,12 @@ export default function DashboardPage() {
           </div>
           <nav className="flex items-center gap-2">
             <Link
+              href="/jobs"
+              className="inline-flex h-10 items-center rounded-md px-3 text-sm font-medium hover:bg-secondary"
+            >
+              חיפוש משרות
+            </Link>
+            <Link
               href="/resume"
               className="inline-flex h-10 items-center rounded-md px-3 text-sm font-medium hover:bg-secondary"
             >
