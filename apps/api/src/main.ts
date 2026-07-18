@@ -19,6 +19,14 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks();
 
   const config = app.get(ConfigService<Env, true>);
+  // Allow the web client to call the API. In development (no explicit list) we
+  // reflect the request origin; in production, restrict via CORS_ORIGINS.
+  const corsOrigins = config.get('CORS_ORIGINS', { infer: true });
+  app.enableCors({
+    origin: corsOrigins ? corsOrigins.split(',').map((o) => o.trim()) : true,
+    credentials: true,
+  });
+
   const port = config.get('API_PORT', { infer: true });
   const host = config.get('API_HOST', { infer: true });
 

@@ -10,6 +10,9 @@ export const envSchema = z.object({
   API_HOST: z.string().min(1).default('0.0.0.0'),
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url().optional(),
+  // Comma-separated allowed CORS origins for the web client. If unset, the API
+  // reflects the request origin (development convenience).
+  CORS_ORIGINS: z.string().optional(),
   JWT_ACCESS_SECRET: z.string().min(16),
   JWT_REFRESH_SECRET: z.string().min(16),
   // Access-token lifetime in seconds (default 15 minutes).
