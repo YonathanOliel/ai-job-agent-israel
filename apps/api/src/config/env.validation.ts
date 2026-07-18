@@ -52,6 +52,9 @@ export const envSchema = z.object({
   JOOBLE_API_KEY: z.string().optional(),
   JOOBLE_LOCATION: z.string().default('Israel'),
   JOOBLE_KEYWORDS: z.string().default(''),
+  // Public Telegram job channels to read (comma-separated usernames, no @).
+  // Uses Telegram's public web preview (t.me/s/<channel>) — no key needed.
+  TELEGRAM_CHANNELS: z.string().default(''),
   // Max jobs to ingest per source per run.
   JOB_INGEST_LIMIT: z.coerce.number().int().positive().max(200).default(50),
   // Include the built-in sample jobs alongside real sources (dev/testing).

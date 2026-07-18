@@ -10,6 +10,7 @@ import { JoobleJobSource } from './jooble-job.source';
 import { RemoteOkJobSource } from './remoteok-job.source';
 import { RemotiveJobSource } from './remotive-job.source';
 import { SeedJobSource } from './seed-job.source';
+import { TelegramJobSource } from './telegram-job.source';
 
 @Module({
   controllers: [JobsController],
@@ -20,6 +21,7 @@ import { SeedJobSource } from './seed-job.source';
     ArbeitnowJobSource,
     RemoteOkJobSource,
     JoobleJobSource,
+    TelegramJobSource,
     SeedJobSource,
     {
       provide: JOB_SOURCES,
@@ -29,6 +31,7 @@ import { SeedJobSource } from './seed-job.source';
         ArbeitnowJobSource,
         RemoteOkJobSource,
         JoobleJobSource,
+        TelegramJobSource,
         SeedJobSource,
       ],
       useFactory: (
@@ -37,6 +40,7 @@ import { SeedJobSource } from './seed-job.source';
         arbeitnow: ArbeitnowJobSource,
         remoteok: RemoteOkJobSource,
         jooble: JoobleJobSource,
+        telegram: TelegramJobSource,
         seed: SeedJobSource,
       ): JobSource[] => {
         // Public, no-key real tech sources are always on.
@@ -44,6 +48,10 @@ import { SeedJobSource } from './seed-job.source';
         // Enabled automatically once a free Jooble API key is configured.
         if (config.get('JOOBLE_API_KEY', { infer: true })) {
           sources.push(jooble);
+        }
+        // Enabled when public Telegram job channels are configured.
+        if (config.get('TELEGRAM_CHANNELS', { infer: true }).trim()) {
+          sources.push(telegram);
         }
         if (config.get('ENABLE_SEED_JOBS', { infer: true })) {
           sources.push(seed);
