@@ -43,6 +43,16 @@ export const envSchema = z.object({
   // Career-profile extraction strategy. "heuristic" works offline (no API key);
   // "llm" uses the configured AI provider for richer extraction.
   PROFILE_EXTRACTOR: z.enum(['heuristic', 'llm']).default('heuristic'),
+  // Real job source (Remotive public API — no key, returns real apply links).
+  REMOTIVE_API_URL: z.string().url().default('https://remotive.com/api/remote-jobs'),
+  REMOTIVE_CATEGORY: z.string().default('software-dev'),
+  // Max jobs to ingest per source per run.
+  JOB_INGEST_LIMIT: z.coerce.number().int().positive().max(200).default(50),
+  // Include the built-in sample jobs alongside real sources (dev/testing).
+  ENABLE_SEED_JOBS: z
+    .string()
+    .optional()
+    .transform((value) => value === 'true'),
 });
 
 export type Env = z.infer<typeof envSchema>;
