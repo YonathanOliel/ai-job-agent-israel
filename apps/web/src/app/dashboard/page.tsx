@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MatchCard } from '@/components/dashboard/match-card';
 import { Button } from '@/components/ui/button';
@@ -70,9 +71,17 @@ export default function DashboardPage() {
             <h1 className="text-xl font-bold">סוכן העבודה החכם</h1>
             <p className="text-sm text-muted-foreground">שלום, {user.displayName ?? user.email}</p>
           </div>
-          <Button variant="ghost" onClick={logout}>
-            התנתקות
-          </Button>
+          <nav className="flex items-center gap-2">
+            <Link
+              href="/resume"
+              className="inline-flex h-10 items-center rounded-md px-3 text-sm font-medium hover:bg-secondary"
+            >
+              קורות חיים
+            </Link>
+            <Button variant="ghost" onClick={logout}>
+              התנתקות
+            </Button>
+          </nav>
         </div>
       </header>
 
@@ -108,6 +117,14 @@ export default function DashboardPage() {
                 המשרות המתאימות ביותר עבורך.
               </CardDescription>
             </CardHeader>
+            <CardContent>
+              <Link
+                href="/resume"
+                className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                העלאת קורות חיים
+              </Link>
+            </CardContent>
           </Card>
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
