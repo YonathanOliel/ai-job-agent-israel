@@ -31,7 +31,7 @@ documentation updated, and a Git commit is created.
 | 4b  | `feature/career-profile`     | AI extraction → structured Career Profile (uses AI provider)      | ✅ Done |
 | 5   | `feature/ai-matching-engine` | Semantic matching + explainable multi-dimension scores            | ✅ Done |
 | 6   | `feature/job-sources`        | Compliant job-source ingestion abstraction + adapters             | ✅ Done |
-| 7   | `feature/dashboard`          | Premium Hebrew-first RTL dashboard                                | ⬜      |
+| 7   | `feature/web-foundation`     | Next.js Hebrew-first RTL app: auth + matches dashboard            | ✅ Done |
 | 8   | `feature/job-search`         | Natural-language AI search + filters                              | ⬜      |
 | 9   | `feature/notifications`      | Continuous monitoring + high-quality match alerts                 | ⬜      |
 | 10  | `feature/resume-optimizer`   | Per-job resume rewrite (PDF/DOCX), ATS-optimized                  | ⬜      |

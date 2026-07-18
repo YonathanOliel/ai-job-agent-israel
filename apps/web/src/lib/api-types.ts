@@ -1,0 +1,71 @@
+export type UserRole = 'CANDIDATE' | 'ADMIN';
+export type LanguageCode = 'HE' | 'EN';
+export type MatchStatus = 'NEW' | 'VIEWED' | 'SAVED' | 'APPLIED' | 'DISMISSED';
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: 'Bearer';
+  expiresIn: number;
+}
+
+export interface PublicUser {
+  id: string;
+  email: string;
+  role: UserRole;
+  displayName: string | null;
+  locale: LanguageCode;
+  createdAt: string;
+}
+
+export interface AuthResult {
+  user: PublicUser;
+  tokens: AuthTokens;
+}
+
+export interface Job {
+  id: string;
+  title: string;
+  company: string;
+  city: string | null;
+  isRemote: boolean;
+  seniority: string | null;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  technologies: string[];
+  language: LanguageCode | null;
+}
+
+export interface DimensionScore {
+  score: number;
+  explanation: string;
+}
+
+export interface MatchScores {
+  overall: number;
+  confidence: DimensionScore;
+  dimensions: Record<string, DimensionScore>;
+  strengths: string[];
+  weaknesses: string[];
+  missingSkills: string[];
+}
+
+export interface JobMatch {
+  id: string;
+  jobId: string;
+  overallScore: number;
+  status: MatchStatus;
+  scores: MatchScores;
+  job: Job;
+}
+
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface GenerateMatchesResult extends Paginated<JobMatch> {
+  generated: number;
+}
