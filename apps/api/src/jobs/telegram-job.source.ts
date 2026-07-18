@@ -12,7 +12,7 @@ const USER_AGENT = 'Mozilla/5.0 (compatible; AiJobAgentIsrael/1.0)';
 
 // A message is treated as a job post only if it clearly advertises a role.
 const JOB_SIGNAL =
-  /דרוש|דרושה|דרושים|דרושות|מגייס|מגייסת|מגייסים|משרה|משרת|hiring|we'?re hiring|join our team|job opening|open position|vacancy/i;
+  /דרוש|דרושה|דרושים|דרושות|מגייס|מגייסת|מגייסים|מגייסות|משרה|משרת|משרות|hiring|we'?re hiring|we are looking|looking for a|join our team|job opening|open position|open role|vacancy|apply now|experience required|responsibilities:/i;
 
 /**
  * Reads PUBLIC Telegram job channels via Telegram's public web preview
