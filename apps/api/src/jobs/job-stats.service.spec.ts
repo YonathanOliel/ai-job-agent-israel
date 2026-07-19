@@ -23,9 +23,10 @@ describe('JobStatsService', () => {
           .fn()
           .mockResolvedValue([{ company: 'A' }, { company: 'B' }, { company: 'C' }]),
         count: jest.fn().mockResolvedValueOnce(3).mockResolvedValueOnce(4).mockResolvedValueOnce(8),
-        aggregate: jest
-          .fn()
-          .mockResolvedValue({ _max: { postedAt: new Date('2026-07-10T00:00:00Z') } }),
+        aggregate: jest.fn().mockResolvedValue({
+          _max: { postedAt: new Date('2026-07-10T00:00:00Z') },
+          _avg: { qualityScore: 71.4 },
+        }),
       },
       $queryRaw: jest
         .fn()
@@ -53,5 +54,6 @@ describe('JobStatsService', () => {
       newestPostedAt: '2026-07-10T00:00:00.000Z',
     });
     expect(stats.israel).toEqual({ located: 7, remote: 3 });
+    expect(stats.avgQualityScore).toBe(71);
   });
 });

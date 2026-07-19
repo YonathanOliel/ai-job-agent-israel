@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JobSearchService } from '../search/job-search.service';
 import { JobDedupService } from './job-dedup.service';
 import { buildContentHash, buildDedupeKey } from './job-dedup.util';
+import { computeQualityScore } from './job-quality.util';
 import { JOB_SOURCES, type JobSource, type RawJob } from './job-source.types';
 import { SourceRegistryService } from './source-registry.service';
 
@@ -121,6 +122,7 @@ export class JobIngestionService {
       postedAt: job.postedAt,
       dedupeKey: buildDedupeKey(job.company, job.title, job.city),
       contentHash: buildContentHash(job.title, job.company, job.description),
+      qualityScore: computeQualityScore({ ...job, source }),
       status: JobStatus.ACTIVE,
     };
   }

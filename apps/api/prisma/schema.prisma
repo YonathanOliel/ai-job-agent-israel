@@ -203,6 +203,7 @@ model Job {
   dedupeKey       String?
   contentHash     String?
   canonicalId     String?          @db.Uuid
+  qualityScore    Int?
   firstSeenAt     DateTime?
   lastSeenAt      DateTime?
   createdAt       DateTime         @default(now())

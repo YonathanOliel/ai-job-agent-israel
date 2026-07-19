@@ -10,6 +10,7 @@ export interface JobStats {
   topTechnologies: Array<{ technology: string; count: number }>;
   freshness: { newInLast24h: number; seenInLast7d: number; newestPostedAt: string | null };
   israel: { located: number; remote: number };
+  avgQualityScore: number;
 }
 
 /**
@@ -37,7 +38,11 @@ export class JobStatsService {
           select: { company: true },
         }),
         this.prisma.job.count({ where: { ...active, isRemote: true } }),
-        this.prisma.job.aggregate({ where: active, _max: { postedAt: true } }),
+        this.prisma.job.aggregate({
+          where: active,
+          _max: { postedAt: true },
+          _avg: { qualityScore: true },
+        }),
         this.prisma.job.count({ where: { ...active, firstSeenAt: { gte: day } } }),
         this.prisma.job.count({ where: { ...active, lastSeenAt: { gte: week } } }),
       ]);
@@ -73,6 +78,7 @@ export class JobStatsService {
         newestPostedAt: newest._max.postedAt?.toISOString() ?? null,
       },
       israel: { located: israelLocated, remote },
+      avgQualityScore: Math.round(newest._avg.qualityScore ?? 0),
     };
   }
 

@@ -62,6 +62,7 @@ const baseJob = (overrides: Partial<Job> = {}): Job => ({
   dedupeKey: null,
   contentHash: null,
   canonicalId: null,
+  qualityScore: null,
   firstSeenAt: null,
   lastSeenAt: null,
   createdAt: new Date('2026-07-10'),
