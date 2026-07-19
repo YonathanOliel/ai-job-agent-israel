@@ -14,6 +14,8 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/jwt-payload.type';
 import { MatchFiltersDto } from './dto/match-filters.dto';
 import { UpdateMatchStatusDto } from './dto/update-match-status.dto';
+import { MatchInsightService } from './match-insight.service';
+import type { MatchInsight } from './match-insight.types';
 import {
   MatchingService,
   type GenerateResult,
@@ -23,7 +25,10 @@ import {
 
 @Controller('matches')
 export class MatchingController {
-  constructor(private readonly matching: MatchingService) {}
+  constructor(
+    private readonly matching: MatchingService,
+    private readonly insights: MatchInsightService,
+  ) {}
 
   @Post('generate')
   @HttpCode(HttpStatus.OK)
@@ -54,5 +59,15 @@ export class MatchingController {
     @Body() dto: UpdateMatchStatusDto,
   ): Promise<MatchWithJob> {
     return this.matching.updateStatus(user.id, jobId, dto.status);
+  }
+
+  /** On-demand LLM explanation of a single match ("why you fit / what you miss"). */
+  @Post(':jobId/explain')
+  @HttpCode(HttpStatus.OK)
+  explain(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('jobId', ParseUUIDPipe) jobId: string,
+  ): Promise<MatchInsight> {
+    return this.insights.explain(user.id, jobId);
   }
 }
