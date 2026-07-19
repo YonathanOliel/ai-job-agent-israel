@@ -11,6 +11,47 @@ export interface PaginatedJobs {
   pageSize: number;
 }
 
+/** High-signal Israeli location terms (English + Hebrew) for the Israel-only filter. */
+const ISRAEL_LOCATION_TERMS = [
+  'israel',
+  'ישראל',
+  'tel aviv',
+  'תל אביב',
+  'תל-אביב',
+  'herzliya',
+  'הרצליה',
+  'haifa',
+  'חיפה',
+  'jerusalem',
+  'ירושלים',
+  'netanya',
+  'נתניה',
+  "ra'anana",
+  'raanana',
+  'רעננה',
+  'petah',
+  'פתח תקווה',
+  'beer sheva',
+  'באר שבע',
+  'yokneam',
+  'יקנעם',
+  'rehovot',
+  'רחובות',
+  'ramat gan',
+  'רמת גן',
+  'givatayim',
+  'גבעתיים',
+  'kfar saba',
+  'כפר סבא',
+  'hod hasharon',
+  'modiin',
+  'מודיעין',
+  'or yehuda',
+  'caesarea',
+  'קיסריה',
+  'airport city',
+];
+
 @Injectable()
 export class JobsService {
   private readonly logger = new Logger(JobsService.name);
@@ -48,7 +89,7 @@ export class JobsService {
       return { items: [], total, page: filters.page, pageSize: filters.pageSize };
     }
     const jobs = await this.prisma.job.findMany({
-      where: { id: { in: ids }, status: JobStatus.ACTIVE },
+      where: { id: { in: ids }, status: JobStatus.ACTIVE, ...this.israelWhere() },
     });
     // Preserve Elasticsearch relevance order.
     const byId = new Map(jobs.map((job) => [job.id, job]));
@@ -80,6 +121,8 @@ export class JobsService {
 
   private buildWhere(filters: JobFiltersDto): Prisma.JobWhereInput {
     const where: Prisma.JobWhereInput = { status: JobStatus.ACTIVE };
+    // Israel-only mandate: every listing must be located in Israel.
+    where.AND = [this.israelWhere()];
 
     if (filters.city) {
       where.city = { contains: filters.city, mode: 'insensitive' };
@@ -107,5 +150,19 @@ export class JobsService {
       ];
     }
     return where;
+  }
+
+  /**
+   * Restricts results to jobs located in Israel. Matches Israeli city/country
+   * signals (English + Hebrew) against the free-text location and city fields,
+   * enforcing the Israel-only mandate across every listing surface.
+   */
+  private israelWhere(): Prisma.JobWhereInput {
+    const clauses: Prisma.JobWhereInput[] = [];
+    for (const term of ISRAEL_LOCATION_TERMS) {
+      clauses.push({ location: { contains: term, mode: 'insensitive' } });
+      clauses.push({ city: { contains: term, mode: 'insensitive' } });
+    }
+    return { OR: clauses };
   }
 }

@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { AlertCircle } from 'lucide-react';
+import { AuthShell } from '@/components/layout/auth-shell';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/ui/password-input';
 import { ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
@@ -30,58 +32,68 @@ export default function LoginPage() {
       await login(email, password);
       router.replace('/dashboard');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'ההתחברות נכשלה.');
+      setError(err instanceof ApiError ? err.message : 'ההתחברות נכשלה. נסו שוב.');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">סוכן העבודה החכם</CardTitle>
-          <CardDescription>התחברות לחשבון שלך</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email">אימייל</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                dir="ltr"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password">סיסמה</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                dir="ltr"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" disabled={submitting} size="lg">
-              {submitting ? 'מתחבר…' : 'התחברות'}
-            </Button>
-          </form>
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            אין לך חשבון?{' '}
-            <Link href="/register" className="font-medium text-primary hover:underline">
-              הרשמה
-            </Link>
+    <AuthShell>
+      <div className="mb-7 text-center lg:text-right">
+        <h1 className="text-2xl font-extrabold tracking-tight">ברוכים השבים</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">התחברו כדי להמשיך למשרות שלכם.</p>
+      </div>
+
+      <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="email">אימייל</Label>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            dir="ltr"
+            className="text-left"
+            placeholder="you@company.com"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="password">סיסמה</Label>
+          <PasswordInput
+            id="password"
+            autoComplete="current-password"
+            placeholder="••••••••"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+
+        {error && (
+          <p
+            role="alert"
+            className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2.5 text-sm font-medium text-destructive"
+          >
+            <AlertCircle className="size-4 shrink-0" aria-hidden />
+            {error}
           </p>
-        </CardContent>
-      </Card>
-    </main>
+        )}
+
+        <Button type="submit" size="lg" loading={submitting} className="mt-1">
+          {submitting ? 'מתחברים…' : 'התחברות'}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        עדיין אין לכם חשבון?{' '}
+        <Link href="/register" className="font-semibold text-primary hover:underline">
+          הרשמה חינם
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

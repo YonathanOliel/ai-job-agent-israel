@@ -1,11 +1,23 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  MapPin,
+  SearchX,
+  SlidersHorizontal,
+  X,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { api, type JobFilters } from '@/lib/api';
 import type { Job, Paginated } from '@/lib/api-types';
 import { formatDate, formatShekels } from '@/lib/utils';
@@ -43,7 +55,7 @@ export function JobSearch({ token }: { token: string }) {
     try {
       setData(await api.listJobs(token, { ...applied, page, pageSize: PAGE_SIZE }));
     } catch {
-      setError('טעינת המשרות נכשלה.');
+      setError('טעינת המשרות נכשלה. בדקו את החיבור ונסו שוב.');
     } finally {
       setLoading(false);
     }
@@ -75,19 +87,31 @@ export function JobSearch({ token }: { token: string }) {
     setApplied({});
   };
 
+  const hasFilters =
+    Boolean(search || city || technology || seniority || isRemote) ||
+    Object.keys(applied).length > 0;
   const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
+      {/* Filter bar */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="p-4 sm:p-5">
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
-            <Input
-              placeholder="חיפוש חופשי: תפקיד, חברה, טכנולוגיה…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="relative">
+              <SlidersHorizontal
+                className="pointer-events-none absolute inset-y-0 end-3.5 my-auto size-4 text-muted-foreground"
+                aria-hidden
+              />
+              <Input
+                placeholder="חיפוש חופשי: תפקיד, חברה או טכנולוגיה…"
+                className="h-12 pe-11 text-[15px]"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="city">עיר</Label>
                 <Input
@@ -102,6 +126,7 @@ export function JobSearch({ token }: { token: string }) {
                 <Input
                   id="tech"
                   dir="ltr"
+                  className="text-left"
                   value={technology}
                   onChange={(e) => setTechnology(e.target.value)}
                   placeholder="react"
@@ -113,7 +138,7 @@ export function JobSearch({ token }: { token: string }) {
                   id="seniority"
                   value={seniority}
                   onChange={(e) => setSeniority(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-11 w-full rounded-lg border border-input bg-card px-3 text-sm shadow-xs transition-colors hover:border-input/80 focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                 >
                   {SENIORITY_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
@@ -122,63 +147,101 @@ export function JobSearch({ token }: { token: string }) {
                   ))}
                 </select>
               </div>
-              <div className="flex items-end gap-2 pb-2">
-                <input
-                  id="remote"
-                  type="checkbox"
-                  checked={isRemote}
-                  onChange={(e) => setIsRemote(e.target.checked)}
-                  className="h-4 w-4"
-                />
-                <Label htmlFor="remote">עבודה מרחוק בלבד</Label>
+              <div className="flex items-end">
+                <label className="inline-flex h-11 w-full cursor-pointer select-none items-center gap-2.5 rounded-lg border border-input bg-card px-3.5 text-sm transition-colors hover:border-input/80">
+                  <input
+                    type="checkbox"
+                    checked={isRemote}
+                    onChange={(e) => setIsRemote(e.target.checked)}
+                    className="size-4 accent-primary"
+                  />
+                  עבודה מרחוק בלבד
+                </label>
               </div>
             </div>
+
             <div className="flex gap-2">
-              <Button type="submit">חיפוש</Button>
-              <Button type="button" variant="ghost" onClick={reset}>
-                ניקוי
+              <Button type="submit" className="px-6">
+                חיפוש
               </Button>
+              {hasFilters && (
+                <Button type="button" variant="ghost" onClick={reset}>
+                  <X className="size-4" aria-hidden />
+                  ניקוי מסננים
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>
       </Card>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
-      {loading ? (
-        <p className="text-muted-foreground">טוען משרות…</p>
+      {/* Results */}
+      {error ? (
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="flex items-center gap-3 py-4 text-sm text-destructive">
+            <AlertCircle className="size-5 shrink-0" aria-hidden />
+            <span className="flex-1 font-medium">{error}</span>
+            <Button size="sm" variant="outline" onClick={() => void fetchJobs()}>
+              נסו שוב
+            </Button>
+          </CardContent>
+        </Card>
+      ) : loading ? (
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <JobRowSkeleton key={i} />
+          ))}
+        </div>
       ) : data && data.items.length > 0 ? (
         <>
-          <p className="text-sm text-muted-foreground">נמצאו {data.total} משרות</p>
-          <div className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
+            נמצאו <span className="font-semibold text-foreground">{data.total}</span> משרות
+          </p>
+          <div className="flex flex-col gap-3">
             {data.items.map((job) => (
               <JobRow key={job.id} job={job} />
             ))}
           </div>
-          <div className="flex items-center justify-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              הקודם
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              עמוד {page} מתוך {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              הבא
-            </Button>
-          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                <ChevronRight className="size-4" aria-hidden />
+                הקודם
+              </Button>
+              <span className="min-w-24 text-center text-sm text-muted-foreground">
+                עמוד {page} מתוך {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                הבא
+                <ChevronLeft className="size-4" aria-hidden />
+              </Button>
+            </div>
+          )}
         </>
       ) : (
-        <p className="text-muted-foreground">לא נמצאו משרות התואמות את החיפוש.</p>
+        <EmptyState
+          icon={SearchX}
+          title="לא נמצאו משרות"
+          description="לא מצאנו משרות שתואמות את החיפוש. נסו לצמצם מסננים או לחפש מונח אחר."
+        >
+          {hasFilters && (
+            <Button variant="outline" onClick={reset}>
+              <X className="size-4" aria-hidden />
+              איפוס החיפוש
+            </Button>
+          )}
+        </EmptyState>
       )}
     </div>
   );
@@ -186,47 +249,76 @@ export function JobSearch({ token }: { token: string }) {
 
 function JobRow({ job }: { job: Job }) {
   return (
-    <Card>
-      <CardHeader>
+    <Card interactive>
+      <CardContent className="p-5">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-semibold">{job.title}</h3>
-            <p className="text-sm text-muted-foreground">{job.company}</p>
+          <div className="min-w-0">
+            <h3 className="truncate text-[17px] font-bold leading-snug">{job.title}</h3>
+            <p className="mt-0.5 truncate text-sm text-muted-foreground">{job.company}</p>
           </div>
           {job.postedAt && (
-            <span className="text-xs text-muted-foreground">{formatDate(job.postedAt)}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {formatDate(job.postedAt)}
+            </span>
           )}
         </div>
-        <div className="mt-2 flex flex-wrap gap-2">
-          <Badge variant="secondary">{job.isRemote ? 'עבודה מרחוק' : (job.city ?? 'ישראל')}</Badge>
+
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <Badge variant="secondary" className="gap-1">
+            <MapPin className="size-3" aria-hidden />
+            {job.isRemote ? 'עבודה מרחוק' : (job.city ?? 'ישראל')}
+          </Badge>
           {job.seniority && <Badge variant="outline">{job.seniority}</Badge>}
           {(job.salaryMin || job.salaryMax) && (
-            <Badge variant="outline">
-              <span className="ltr-inline">
-                {formatShekels(job.salaryMin)}–{formatShekels(job.salaryMax)}
-              </span>
+            <Badge variant="outline" className="ltr-inline">
+              {formatShekels(job.salaryMin)}–{formatShekels(job.salaryMax)}
             </Badge>
           )}
           {job.technologies.slice(0, 5).map((tech) => (
-            <Badge key={tech} variant="secondary" className="ltr-inline">
+            <Badge key={tech} variant="default" className="ltr-inline">
               {tech}
             </Badge>
           ))}
         </div>
-      </CardHeader>
-      <CardContent>
-        <p className="line-clamp-2 text-sm text-muted-foreground">{job.description}</p>
+
+        {job.description && (
+          <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+            {job.description}
+          </p>
+        )}
+
         {job.sourceUrl && (
           <a
             href={job.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            צפייה והגשה למשרה ↗
+            <ExternalLink className="size-4" aria-hidden />
+            צפייה והגשה
           </a>
         )}
       </CardContent>
+    </Card>
+  );
+}
+
+function JobRowSkeleton() {
+  return (
+    <Card className="p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-5 w-1/2" />
+          <Skeleton className="h-4 w-1/4" />
+        </div>
+        <Skeleton className="h-4 w-16" />
+      </div>
+      <div className="mt-4 flex gap-2">
+        <Skeleton className="h-6 w-20 rounded-full" />
+        <Skeleton className="h-6 w-16 rounded-full" />
+        <Skeleton className="h-6 w-14 rounded-full" />
+      </div>
+      <Skeleton className="mt-4 h-9 w-32 rounded-lg" />
     </Card>
   );
 }

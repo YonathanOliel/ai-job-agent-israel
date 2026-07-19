@@ -14,8 +14,8 @@ export default function HomePage() {
   }, [user, loading, router]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <p className="text-muted-foreground">טוען…</p>
+    <main className="grid min-h-screen place-items-center">
+      <div className="size-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
     </main>
   );
 }
