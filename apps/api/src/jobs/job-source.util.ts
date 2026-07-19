@@ -69,6 +69,14 @@ export function extractTechnologies(text: string): string[] {
   return TECH_TERMS.filter((term) => mentions(lower, term));
 }
 
+const ISRAEL_LOCATION =
+  /israel|ישראל|tel[\s-]?aviv|תל[\s-]?אביב|herzliya|הרצליה|haifa|חיפה|jerusalem|ירושלים|netanya|נתניה|ra'?anana|רעננה|petah|פתח[\s-]?תקווה|beer[\s-]?sheva|באר[\s-]?שבע|yokneam|יקנעם|caesarea|rehovot|רחובות|ramat[\s-]?gan|רמת[\s-]?גן|givatayim|kfar[\s-]?saba|hod[\s-]?hasharon|modiin|airport[\s-]?city|or[\s-]?yehuda/i;
+
+/** Whether a location string refers to Israel (English or Hebrew city/country). */
+export function isIsraelLocation(text: string): boolean {
+  return ISRAEL_LOCATION.test(text ?? '');
+}
+
 /**
  * Whole-word match for a term. Alphanumeric terms use word boundaries (so "go"
  * does not match "Goldhausen"); terms with symbols (node.js, c#, .net) fall back
@@ -104,4 +112,17 @@ export function stripHtml(html: string): string {
     .replace(/&quot;/g, '"')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/** Decode HTML entities (named + numeric) without stripping tags. */
+export function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)));
 }

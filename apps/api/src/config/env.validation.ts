@@ -55,6 +55,12 @@ export const envSchema = z.object({
   // Public Telegram job channels to read (comma-separated usernames, no @).
   // Uses Telegram's public web preview (t.me/s/<channel>) — no key needed.
   TELEGRAM_CHANNELS: z.string().default(''),
+  // Public ATS job-board APIs (no key). Comma-separated company tokens; each
+  // entry may be "token" or "token|Display Name". Israel-located tech roles
+  // from these companies' official public boards are ingested.
+  GREENHOUSE_COMPANIES: z.string().default(''),
+  LEVER_COMPANIES: z.string().default(''),
+  ASHBY_COMPANIES: z.string().default(''),
   // Max jobs to ingest per source per run.
   JOB_INGEST_LIMIT: z.coerce.number().int().positive().max(200).default(50),
   // Include the built-in sample jobs alongside real sources (dev/testing).
