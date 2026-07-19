@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { LanguageCode, Prisma, User } from '@prisma/client';
+import { LanguageCode, Prisma, User, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 export interface CreateUserInput {
@@ -7,6 +7,7 @@ export interface CreateUserInput {
   passwordHash: string;
   displayName?: string;
   locale?: LanguageCode;
+  role?: UserRole;
 }
 
 @Injectable()
@@ -27,7 +28,17 @@ export class UsersService {
       passwordHash: input.passwordHash,
       displayName: input.displayName,
       locale: input.locale,
+      role: input.role,
     };
     return this.prisma.user.create({ data });
+  }
+
+  /** Promotes the given email to a role (used to bootstrap the owner). Returns updated count. */
+  async setRoleByEmail(email: string, role: UserRole): Promise<number> {
+    const result = await this.prisma.user.updateMany({
+      where: { email: email.toLowerCase() },
+      data: { role },
+    });
+    return result.count;
   }
 }

@@ -1,5 +1,7 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { AuditAction, User } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
+import { AuditAction, User, UserRole } from '@prisma/client';
+import type { Env } from '../config/env.validation';
 import { AuditService } from '../audit/audit.service';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
@@ -15,6 +17,7 @@ export class AuthService {
     private readonly passwords: PasswordService,
     private readonly tokens: TokenService,
     private readonly audit: AuditService,
+    private readonly config: ConfigService<Env, true>,
   ) {}
 
   async register(dto: RegisterDto, context: RequestContext): Promise<AuthResult> {
@@ -24,11 +27,14 @@ export class AuthService {
     }
 
     const passwordHash = await this.passwords.hash(dto.password);
+    const ownerEmail = this.config.get('SUPER_ADMIN_EMAIL', { infer: true });
+    const isOwner = Boolean(ownerEmail) && dto.email.toLowerCase() === ownerEmail!.toLowerCase();
     const user = await this.users.create({
       email: dto.email,
       passwordHash,
       displayName: dto.displayName,
       locale: dto.locale,
+      role: isOwner ? UserRole.SUPER_ADMIN : undefined,
     });
 
     await this.audit.record({ action: AuditAction.USER_REGISTERED, userId: user.id, ...context });

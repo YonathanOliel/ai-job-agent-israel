@@ -17,7 +17,9 @@ datasource db {
 
 enum UserRole {
   CANDIDATE
+  SUPPORT
   ADMIN
+  SUPER_ADMIN
 }
 
 enum LanguageCode {

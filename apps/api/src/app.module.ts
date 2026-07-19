@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './config/env.validation';
+import { AdminModule } from './admin/admin.module';
 import { AiModule } from './ai/ai.module';
 import { AuthModule } from './auth/auth.module';
 import { CareerProfileModule } from './career-profile/career-profile.module';
@@ -33,6 +34,7 @@ import { StorageModule } from './storage/storage.module';
     JobsModule,
     MatchingModule,
     HealthModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

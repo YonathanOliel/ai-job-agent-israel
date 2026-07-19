@@ -38,4 +38,16 @@ describe('RolesGuard', () => {
     const guard = buildGuard([UserRole.ADMIN]);
     expect(() => guard.canActivate(buildContext())).toThrow(ForbiddenException);
   });
+
+  it('lets a higher role satisfy a lower requirement (SUPER_ADMIN → ADMIN route)', () => {
+    const guard = buildGuard([UserRole.ADMIN]);
+    expect(guard.canActivate(buildContext(UserRole.SUPER_ADMIN))).toBe(true);
+    expect(() => guard.canActivate(buildContext(UserRole.SUPPORT))).toThrow(ForbiddenException);
+  });
+
+  it('restricts SUPER_ADMIN routes to the owner only', () => {
+    const guard = buildGuard([UserRole.SUPER_ADMIN]);
+    expect(guard.canActivate(buildContext(UserRole.SUPER_ADMIN))).toBe(true);
+    expect(() => guard.canActivate(buildContext(UserRole.ADMIN))).toThrow(ForbiddenException);
+  });
 });

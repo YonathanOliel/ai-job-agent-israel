@@ -116,6 +116,6 @@ import { TelegramJobSource } from './telegram-job.source';
       },
     },
   ],
-  exports: [JobsService],
+  exports: [JobsService, JobStatsService, SourceRegistryService],
 })
 export class JobsModule {}

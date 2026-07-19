@@ -1,5 +1,7 @@
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuditAction, LanguageCode, User, UserRole } from '@prisma/client';
+import type { Env } from '../config/env.validation';
 import { AuditService } from '../audit/audit.service';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
@@ -47,7 +49,11 @@ describe('AuthService', () => {
     audit = {
       record: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<AuditService>;
-    service = new AuthService(users, passwords, tokenService, audit);
+    const config = { get: jest.fn().mockReturnValue(undefined) } as unknown as ConfigService<
+      Env,
+      true
+    >;
+    service = new AuthService(users, passwords, tokenService, audit, config);
   });
 
   describe('register', () => {

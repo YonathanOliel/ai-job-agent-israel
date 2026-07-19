@@ -10,6 +10,9 @@ export const envSchema = z.object({
   API_HOST: z.string().min(1).default('0.0.0.0'),
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url().optional(),
+  // Email of the single application owner. On registration/startup this account
+  // is promoted to SUPER_ADMIN — the only role with access to the admin console.
+  SUPER_ADMIN_EMAIL: z.string().email().optional(),
   // Comma-separated allowed CORS origins for the web client. If unset, the API
   // reflects the request origin (development convenience).
   CORS_ORIGINS: z.string().optional(),
