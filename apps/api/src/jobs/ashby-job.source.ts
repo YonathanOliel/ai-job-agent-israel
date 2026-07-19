@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { EmploymentType, LanguageCode, WorkArrangement } from '@prisma/client';
 import type { Env } from '../config/env.validation';
 import { AtsCompanySource, type AtsCompany } from './ats-company.source';
+import { CompanyRegistryService } from './company-registry.service';
 import type { RawJob } from './job-source.types';
 import { extractTechnologies, inferSeniority, stripHtml } from './job-source.util';
 
@@ -31,8 +32,8 @@ interface AshbyResponse {
 export class AshbyJobSource extends AtsCompanySource {
   readonly name = 'ashby';
 
-  constructor(config: ConfigService<Env, true>) {
-    super(config);
+  constructor(config: ConfigService<Env, true>, companies: CompanyRegistryService) {
+    super(config, companies);
   }
 
   protected companyConfig(): string {

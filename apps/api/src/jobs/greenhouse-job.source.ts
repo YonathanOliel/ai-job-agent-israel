@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { LanguageCode, WorkArrangement } from '@prisma/client';
 import type { Env } from '../config/env.validation';
 import { AtsCompanySource, type AtsCompany } from './ats-company.source';
+import { CompanyRegistryService } from './company-registry.service';
 import type { RawJob } from './job-source.types';
 import {
   decodeHtmlEntities,
@@ -32,8 +33,8 @@ interface GreenhouseResponse {
 export class GreenhouseJobSource extends AtsCompanySource {
   readonly name = 'greenhouse';
 
-  constructor(config: ConfigService<Env, true>) {
-    super(config);
+  constructor(config: ConfigService<Env, true>, companies: CompanyRegistryService) {
+    super(config, companies);
   }
 
   protected companyConfig(): string {

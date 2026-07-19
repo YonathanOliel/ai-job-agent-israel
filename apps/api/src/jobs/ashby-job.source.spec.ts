@@ -1,9 +1,14 @@
 import { ConfigService } from '@nestjs/config';
 import { EmploymentType } from '@prisma/client';
 import type { Env } from '../config/env.validation';
+import { CompanyRegistryService } from './company-registry.service';
 import { AshbyJobSource } from './ashby-job.source';
 
 describe('AshbyJobSource', () => {
+  const registry = {
+    listFor: jest.fn().mockResolvedValue([]),
+  } as unknown as CompanyRegistryService;
+
   const buildConfig = (companies: string): ConfigService<Env, true> =>
     ({
       get: (key: string) =>
@@ -43,7 +48,7 @@ describe('AshbyJobSource', () => {
       }),
     ) as unknown as typeof fetch;
 
-    const jobs = await new AshbyJobSource(buildConfig('lemonade|Lemonade')).fetchJobs();
+    const jobs = await new AshbyJobSource(buildConfig('lemonade|Lemonade'), registry).fetchJobs();
 
     expect(jobs).toHaveLength(1);
     const [job] = jobs;
@@ -56,7 +61,7 @@ describe('AshbyJobSource', () => {
   });
 
   it('returns nothing when no companies are configured', async () => {
-    const jobs = await new AshbyJobSource(buildConfig('')).fetchJobs();
+    const jobs = await new AshbyJobSource(buildConfig(''), registry).fetchJobs();
     expect(jobs).toEqual([]);
   });
 });

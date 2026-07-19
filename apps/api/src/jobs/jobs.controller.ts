@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
@@ -10,6 +11,8 @@ import {
 } from '@nestjs/common';
 import { Job, Source, UserRole } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
+import { AtsDetectionService, type AtsDetection } from './ats-detection.service';
+import { DiscoverDto } from './dto/discover.dto';
 import { JobFiltersDto } from './dto/job-filters.dto';
 import { IngestionQueueService } from './ingestion-queue.service';
 import { JobDedupService, type DedupResult } from './job-dedup.service';
@@ -27,6 +30,7 @@ export class JobsController {
     private readonly dedup: JobDedupService,
     private readonly stats: JobStatsService,
     private readonly registry: SourceRegistryService,
+    private readonly discovery: AtsDetectionService,
   ) {}
 
   @Get()
@@ -77,5 +81,12 @@ export class JobsController {
   @HttpCode(HttpStatus.OK)
   runDedup(): Promise<DedupResult> {
     return this.dedup.reconcile();
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Post('discover')
+  @HttpCode(HttpStatus.OK)
+  discover(@Body() body: DiscoverDto): Promise<AtsDetection[]> {
+    return this.discovery.discover(body.tokens);
   }
 }

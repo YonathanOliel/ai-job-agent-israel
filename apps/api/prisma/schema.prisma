@@ -256,6 +256,25 @@ model Source {
   @@map("sources")
 }
 
+/// Companies discovered on public ATS boards. The ATS connectors read their
+/// board list from env AND from here, so the Discovery engine can grow coverage
+/// automatically without code or config changes.
+model Company {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  atsType      String
+  atsToken     String
+  enabled      Boolean  @default(true)
+  origin       String   @default("discovered")
+  lastJobCount Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([atsType, atsToken])
+  @@index([atsType, enabled])
+  @@map("companies")
+}
+
 model RefreshToken {
   id        String    @id @default(uuid()) @db.Uuid
   userId    String    @db.Uuid

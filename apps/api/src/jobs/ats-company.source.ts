@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Env } from '../config/env.validation';
+import { CompanyRegistryService } from './company-registry.service';
 import type { JobSource, RawJob } from './job-source.types';
 import { isIsraelLocation, isTechRole } from './job-source.util';
 
@@ -18,14 +19,18 @@ export interface AtsCompany {
 /**
  * Base for job sources backed by public ATS job-board APIs (Greenhouse, Lever,
  * Ashby, …). Each aggregates the officially-public boards of the companies
- * configured for it. Only Israel-located technology roles are kept, honoring
- * the Israel-only mandate. These APIs are public and key-free — no scraping.
+ * configured for it (env) plus any companies discovered by the Discovery
+ * engine. Only Israel-located technology roles are kept, honoring the
+ * Israel-only mandate. These APIs are public and key-free — no scraping.
  */
 export abstract class AtsCompanySource implements JobSource {
   abstract readonly name: string;
   protected readonly logger = new Logger(this.constructor.name);
 
-  constructor(protected readonly config: ConfigService<Env, true>) {}
+  constructor(
+    protected readonly config: ConfigService<Env, true>,
+    private readonly companyRegistry: CompanyRegistryService,
+  ) {}
 
   /** Raw comma-separated company configuration for this ATS. */
   protected abstract companyConfig(): string;
@@ -33,7 +38,7 @@ export abstract class AtsCompanySource implements JobSource {
   protected abstract fetchCompany(company: AtsCompany): Promise<RawJob[]>;
 
   async fetchJobs(): Promise<RawJob[]> {
-    const companies = this.parseCompanies(this.companyConfig());
+    const companies = await this.resolveCompanies();
     if (companies.length === 0) {
       return [];
     }
@@ -54,6 +59,22 @@ export abstract class AtsCompanySource implements JobSource {
       }
     }
     return jobs.slice(0, limit);
+  }
+
+  /** Union of env-configured and discovered companies, deduped by token. */
+  protected async resolveCompanies(): Promise<AtsCompany[]> {
+    const fromEnv = this.parseCompanies(this.companyConfig());
+    const discovered = await this.companyRegistry.listFor(this.name);
+    const byToken = new Map<string, AtsCompany>();
+    for (const company of fromEnv) {
+      byToken.set(company.token, company);
+    }
+    for (const company of discovered) {
+      if (!byToken.has(company.atsToken)) {
+        byToken.set(company.atsToken, { token: company.atsToken, name: company.name });
+      }
+    }
+    return [...byToken.values()];
   }
 
   /** Keep only Israel-located technology roles. */

@@ -4,7 +4,9 @@ import type { Env } from '../config/env.validation';
 import { JOB_SOURCES, type JobSource } from './job-source.types';
 import { ArbeitnowJobSource } from './arbeitnow-job.source';
 import { AshbyJobSource } from './ashby-job.source';
+import { AtsDetectionService } from './ats-detection.service';
 import { CareerjetJobSource } from './careerjet-job.source';
+import { CompanyRegistryService } from './company-registry.service';
 import { FindworkJobSource } from './findwork-job.source';
 import { GreenhouseJobSource } from './greenhouse-job.source';
 import { IngestionQueueService } from './ingestion-queue.service';
@@ -30,6 +32,8 @@ import { TelegramJobSource } from './telegram-job.source';
     JobDedupService,
     JobStatsService,
     SourceRegistryService,
+    CompanyRegistryService,
+    AtsDetectionService,
     IngestionQueueService,
     RemotiveJobSource,
     ArbeitnowJobSource,
