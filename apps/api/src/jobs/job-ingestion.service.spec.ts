@@ -54,4 +54,20 @@ describe('JobIngestionService', () => {
     expect(call.update.firstSeenAt).toBeUndefined();
     expect(call.update.lastSeenAt).toBeInstanceOf(Date);
   });
+
+  it('exposes source names for fan-out scheduling', () => {
+    expect(service.sourceNames()).toEqual(['seed']);
+  });
+
+  it('ingests a single source by name', async () => {
+    const count = await service.ingestSource('seed');
+
+    expect(count).toBe(2);
+    expect(prisma.job.upsert).toHaveBeenCalledTimes(2);
+    expect(search.index).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws for an unknown source so the queue can retry', async () => {
+    await expect(service.ingestSource('nope')).rejects.toThrow(/Unknown job source/);
+  });
 });

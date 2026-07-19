@@ -30,20 +30,38 @@ export class JobIngestionService {
     const succeeded: string[] = [];
     for (const source of this.sources) {
       try {
-        const jobs = await source.fetchJobs();
-        for (const job of jobs) {
-          const persisted = await this.upsert(source.name, job);
-          await this.search.index(persisted);
-          ingested += 1;
-        }
+        ingested += await this.runSource(source);
         succeeded.push(source.name);
-        this.logger.log(`Ingested ${jobs.length} jobs from "${source.name}"`);
       } catch (error) {
         // A single failing source must not abort ingestion of the others.
         this.logger.error(`Source "${source.name}" failed during ingestion`, error as Error);
       }
     }
     return { ingested, sources: succeeded };
+  }
+
+  /** Names of all enabled sources (used to fan out scheduled ingestion). */
+  sourceNames(): string[] {
+    return this.sources.map((source) => source.name);
+  }
+
+  /** Ingests a single source by name. Throws so the queue can retry it. */
+  async ingestSource(name: string): Promise<number> {
+    const source = this.sources.find((candidate) => candidate.name === name);
+    if (!source) {
+      throw new Error(`Unknown job source "${name}"`);
+    }
+    return this.runSource(source);
+  }
+
+  private async runSource(source: JobSource): Promise<number> {
+    const jobs = await source.fetchJobs();
+    for (const job of jobs) {
+      const persisted = await this.upsert(source.name, job);
+      await this.search.index(persisted);
+    }
+    this.logger.log(`Ingested ${jobs.length} jobs from "${source.name}"`);
+    return jobs.length;
   }
 
   private async upsert(source: string, job: RawJob): Promise<Job> {

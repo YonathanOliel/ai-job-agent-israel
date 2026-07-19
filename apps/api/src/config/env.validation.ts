@@ -80,6 +80,12 @@ export const envSchema = z.object({
   ELASTICSEARCH_INDEX: z.string().default('jobs'),
   // Max jobs to ingest per source per run.
   JOB_INGEST_LIMIT: z.coerce.number().int().positive().max(200).default(50),
+  // Background ingestion queue (BullMQ on Redis). When INGEST_CRON is a valid
+  // cron expression, each source is ingested automatically on that schedule.
+  // Empty = no scheduled ingestion (manual POST /api/jobs/ingest still works).
+  INGEST_CRON: z.string().default(''),
+  INGEST_CONCURRENCY: z.coerce.number().int().positive().max(20).default(2),
+  INGEST_JOB_ATTEMPTS: z.coerce.number().int().positive().max(10).default(3),
   // Include the built-in sample jobs alongside real sources (dev/testing).
   ENABLE_SEED_JOBS: z
     .string()

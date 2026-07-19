@@ -11,6 +11,7 @@ import {
 import { Job, UserRole } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JobFiltersDto } from './dto/job-filters.dto';
+import { IngestionQueueService } from './ingestion-queue.service';
 import { JobIngestionService, type IngestionResult } from './job-ingestion.service';
 import { JobsService, type PaginatedJobs } from './jobs.service';
 
@@ -19,6 +20,7 @@ export class JobsController {
   constructor(
     private readonly jobs: JobsService,
     private readonly ingestion: JobIngestionService,
+    private readonly queue: IngestionQueueService,
   ) {}
 
   @Get()
@@ -36,6 +38,13 @@ export class JobsController {
   @HttpCode(HttpStatus.OK)
   ingest(): Promise<IngestionResult> {
     return this.ingestion.ingest();
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Post('ingest/enqueue')
+  @HttpCode(HttpStatus.OK)
+  enqueue(): Promise<{ enqueued: number }> {
+    return this.queue.enqueueAll();
   }
 
   @Roles(UserRole.ADMIN)
