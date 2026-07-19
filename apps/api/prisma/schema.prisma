@@ -188,6 +188,13 @@ model Job {
   technologies    String[]
   postedAt        DateTime?
   status          JobStatus        @default(ACTIVE)
+  // Deduplication & freshness tracking (populated at ingestion).
+  // dedupeKey groups the same posting seen across multiple sources;
+  // contentHash detects changes to a posting's content.
+  dedupeKey       String?
+  contentHash     String?
+  firstSeenAt     DateTime?
+  lastSeenAt      DateTime?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
@@ -196,6 +203,7 @@ model Job {
   @@unique([source, externalId])
   @@index([status])
   @@index([city])
+  @@index([dedupeKey])
   @@map("jobs")
 }
 

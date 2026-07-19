@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { JobStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { buildContentHash, buildDedupeKey } from './job-dedup.util';
 import { JOB_SOURCES, type JobSource, type RawJob } from './job-source.types';
 
 export interface IngestionResult {
@@ -43,10 +44,13 @@ export class JobIngestionService {
 
   private async upsert(source: string, job: RawJob): Promise<void> {
     const data = this.toData(source, job);
+    const now = new Date();
     await this.prisma.job.upsert({
       where: { source_externalId: { source, externalId: job.externalId } },
-      create: data,
-      update: data,
+      // Track when we first and last observed the posting; only lastSeenAt moves
+      // on re-ingestion so freshness/staleness can be derived later.
+      create: { ...data, firstSeenAt: now, lastSeenAt: now },
+      update: { ...data, lastSeenAt: now },
     });
   }
 
@@ -71,6 +75,8 @@ export class JobIngestionService {
       skills: job.skills ?? [],
       technologies: job.technologies ?? [],
       postedAt: job.postedAt,
+      dedupeKey: buildDedupeKey(job.company, job.title, job.city),
+      contentHash: buildContentHash(job.title, job.company, job.description),
       status: JobStatus.ACTIVE,
     };
   }

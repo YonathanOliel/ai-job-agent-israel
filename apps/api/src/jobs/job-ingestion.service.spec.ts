@@ -31,4 +31,17 @@ describe('JobIngestionService', () => {
       }),
     );
   });
+
+  it('stamps dedupeKey/contentHash and only firstSeenAt on create', async () => {
+    await service.ingest();
+
+    const call = prisma.job.upsert.mock.calls[0]![0];
+    expect(call.create.dedupeKey).toMatch(/^[0-9a-f]{24}$/);
+    expect(call.create.contentHash).toEqual(expect.any(String));
+    expect(call.create.firstSeenAt).toBeInstanceOf(Date);
+    expect(call.create.lastSeenAt).toBeInstanceOf(Date);
+    // Re-ingestion must not reset firstSeenAt.
+    expect(call.update.firstSeenAt).toBeUndefined();
+    expect(call.update.lastSeenAt).toBeInstanceOf(Date);
+  });
 });
