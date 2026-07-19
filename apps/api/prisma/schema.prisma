@@ -22,6 +22,14 @@ enum UserRole {
   SUPER_ADMIN
 }
 
+/// Role of a user within an organization (tenant-scoped, independent of the
+/// platform-wide UserRole).
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
 enum LanguageCode {
   HE
   EN
@@ -114,8 +122,38 @@ model User {
   matches       JobMatch[]
   refreshTokens RefreshToken[]
   auditLogs     AuditLog[]
+  orgMemberships OrganizationMembership[]
 
   @@map("users")
+}
+
+/// A tenant. Customer data (recruiters, saved searches, talent lists) is scoped
+/// to an organization; the job market dataset itself is shared across tenants.
+model Organization {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String   @unique
+  plan      String   @default("free")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships OrganizationMembership[]
+
+  @@map("organizations")
+}
+
+model OrganizationMembership {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String       @db.Uuid
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           OrgRole      @default(MEMBER)
+  createdAt      DateTime     @default(now())
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("organization_memberships")
 }
 
 model Resume {
