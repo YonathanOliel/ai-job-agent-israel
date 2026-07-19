@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CareerProfile, Job, SeniorityLevel, WorkArrangement } from '@prisma/client';
+import { computeWeightedOverall } from './match-weights';
 import type {
   DimensionScore,
   MatchDimensions,
@@ -18,21 +19,6 @@ const SENIORITY_RANK: Record<SeniorityLevel, number> = {
   EXECUTIVE: 7,
 };
 
-const OVERALL_WEIGHTS: Record<keyof MatchDimensions, number> = {
-  technology: 0.22,
-  skill: 0.13,
-  experience: 0.2,
-  location: 0.1,
-  remote: 0.05,
-  salary: 0.1,
-  industry: 0.05,
-  growth: 0.07,
-  learningOpportunity: 0.08,
-  culture: 0,
-  careerProgression: 0,
-  interviewProbability: 0,
-};
-
 /**
  * Deterministic, offline match scorer. Produces every dimension with an
  * explanation and a weighted overall score. A semantic/embedding or LLM scorer
@@ -42,7 +28,12 @@ const OVERALL_WEIGHTS: Record<keyof MatchDimensions, number> = {
 export class DeterministicMatchScorer implements MatchScorer {
   readonly name = 'deterministic';
 
-  score(profile: CareerProfile, job: Job): MatchResult {
+  /** Fully offline and synchronous; wrapped in a resolved promise to satisfy {@link MatchScorer}. */
+  score(profile: CareerProfile, job: Job): Promise<MatchResult> {
+    return Promise.resolve(this.computeSync(profile, job));
+  }
+
+  private computeSync(profile: CareerProfile, job: Job): MatchResult {
     const technology = this.scoreOverlap(
       'technologies',
       this.normalize(job.technologies),
@@ -268,11 +259,7 @@ export class DeterministicMatchScorer implements MatchScorer {
   }
 
   private weightedOverall(dimensions: MatchDimensions): number {
-    let total = 0;
-    for (const key of Object.keys(OVERALL_WEIGHTS) as Array<keyof MatchDimensions>) {
-      total += dimensions[key].score * OVERALL_WEIGHTS[key];
-    }
-    return Math.round(total);
+    return computeWeightedOverall(dimensions);
   }
 
   private summarize(dimensions: MatchDimensions): { strengths: string[]; weaknesses: string[] } {

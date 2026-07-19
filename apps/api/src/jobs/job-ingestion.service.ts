@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Job, JobStatus, Prisma, SourceRunStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmbeddingService } from '../embeddings/embedding.service';
 import { JobSearchService } from '../search/job-search.service';
 import { JobDedupService } from './job-dedup.service';
 import { buildContentHash, buildDedupeKey } from './job-dedup.util';
@@ -16,7 +17,8 @@ export interface IngestionResult {
 /**
  * Pulls postings from all enabled {@link JobSource}s and upserts them, keyed by
  * (source, externalId) so re-ingestion is idempotent. Each upserted posting is
- * also indexed into the search backend (best-effort).
+ * also indexed into the search backend and embedded for semantic matching
+ * (both best-effort).
  */
 @Injectable()
 export class JobIngestionService {
@@ -25,6 +27,7 @@ export class JobIngestionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly search: JobSearchService,
+    private readonly embeddings: EmbeddingService,
     private readonly dedup: JobDedupService,
     private readonly registry: SourceRegistryService,
     @Inject(JOB_SOURCES) private readonly sources: JobSource[],
@@ -72,6 +75,7 @@ export class JobIngestionService {
       for (const job of jobs) {
         const persisted = await this.upsert(source.name, job);
         await this.search.index(persisted);
+        await this.embeddings.embedJob(persisted);
       }
       this.logger.log(`Ingested ${jobs.length} jobs from "${source.name}"`);
       await this.registry.recordRun(source.name, SourceRunStatus.SUCCESS, jobs.length);

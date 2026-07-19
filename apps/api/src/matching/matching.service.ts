@@ -37,7 +37,7 @@ export class MatchingService {
 
     const jobs = await this.prisma.job.findMany({ where: { status: JobStatus.ACTIVE } });
     for (const job of jobs) {
-      const result = this.scorer.score(profile, job);
+      const result = await this.scorer.score(profile, job);
       await this.prisma.jobMatch.upsert({
         where: { userId_jobId: { userId, jobId: job.id } },
         create: {

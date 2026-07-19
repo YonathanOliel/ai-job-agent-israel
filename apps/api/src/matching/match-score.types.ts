@@ -38,9 +38,10 @@ export interface MatchResult {
 
 /**
  * Scores how well a job fits a candidate's career profile. Implementations may
- * be deterministic, embedding-based, or LLM-driven — all behind this interface.
+ * be deterministic, embedding-based, or LLM-driven — all behind this
+ * interface. Async because semantic scorers look up persisted embeddings.
  */
 export interface MatchScorer {
   readonly name: string;
-  score(profile: CareerProfile, job: Job): MatchResult;
+  score(profile: CareerProfile, job: Job): Promise<MatchResult>;
 }

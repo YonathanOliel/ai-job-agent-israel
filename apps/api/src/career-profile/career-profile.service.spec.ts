@@ -8,6 +8,7 @@ import {
   SeniorityLevel,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmbeddingService } from '../embeddings/embedding.service';
 import { CareerProfileService } from './career-profile.service';
 import type { ProfileExtractor } from './profile-extractor.types';
 import type { StructuredProfile } from './structured-profile.schema';
@@ -49,6 +50,7 @@ describe('CareerProfileService', () => {
     resume: { findFirst: jest.Mock };
     careerProfile: { upsert: jest.Mock; findUnique: jest.Mock };
   };
+  let embeddings: { embedProfile: jest.Mock };
   let extractor: jest.Mocked<ProfileExtractor>;
   let service: CareerProfileService;
 
@@ -60,11 +62,16 @@ describe('CareerProfileService', () => {
         findUnique: jest.fn().mockResolvedValue({ id: 'p1', userId: 'u1' } as CareerProfile),
       },
     };
+    embeddings = { embedProfile: jest.fn().mockResolvedValue(undefined) };
     extractor = {
       name: 'heuristic',
       extract: jest.fn().mockResolvedValue(structured),
     };
-    service = new CareerProfileService(prisma as unknown as PrismaService, extractor);
+    service = new CareerProfileService(
+      prisma as unknown as PrismaService,
+      embeddings as unknown as EmbeddingService,
+      extractor,
+    );
   });
 
   it('generates and upserts a profile from a parsed resume', async () => {

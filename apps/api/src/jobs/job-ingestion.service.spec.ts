@@ -1,4 +1,5 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { EmbeddingService } from '../embeddings/embedding.service';
 import { JobSearchService } from '../search/job-search.service';
 import { JobDedupService } from './job-dedup.service';
 import { JobIngestionService } from './job-ingestion.service';
@@ -13,6 +14,7 @@ describe('JobIngestionService', () => {
 
   let prisma: { job: { upsert: jest.Mock } };
   let search: { index: jest.Mock };
+  let embeddings: { embedJob: jest.Mock };
   let dedup: { reconcile: jest.Mock };
   let registry: { recordRun: jest.Mock };
   let source: JobSource;
@@ -23,12 +25,14 @@ describe('JobIngestionService', () => {
       job: { upsert: jest.fn().mockImplementation((args) => ({ id: 'x', ...args.create })) },
     };
     search = { index: jest.fn().mockResolvedValue(undefined) };
+    embeddings = { embedJob: jest.fn().mockResolvedValue(undefined) };
     dedup = { reconcile: jest.fn().mockResolvedValue({ groups: 0, duplicates: 0, updated: 0 }) };
     registry = { recordRun: jest.fn().mockResolvedValue(undefined) };
     source = { name: 'seed', fetchJobs: jest.fn().mockResolvedValue(jobs) };
     service = new JobIngestionService(
       prisma as unknown as PrismaService,
       search as unknown as JobSearchService,
+      embeddings as unknown as EmbeddingService,
       dedup as unknown as JobDedupService,
       registry as unknown as SourceRegistryService,
       [source],
@@ -42,6 +46,7 @@ describe('JobIngestionService', () => {
     expect(result.sources).toEqual(['seed']);
     expect(prisma.job.upsert).toHaveBeenCalledTimes(2);
     expect(search.index).toHaveBeenCalledTimes(2);
+    expect(embeddings.embedJob).toHaveBeenCalledTimes(2);
     expect(dedup.reconcile).toHaveBeenCalledTimes(1);
     expect(registry.recordRun).toHaveBeenCalledWith('seed', 'SUCCESS', 2);
     expect(prisma.job.upsert).toHaveBeenCalledWith(

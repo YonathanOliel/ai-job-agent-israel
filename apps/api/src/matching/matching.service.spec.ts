@@ -42,7 +42,7 @@ describe('MatchingService', () => {
       },
       $transaction: jest.fn().mockImplementation((ops: unknown[]) => Promise.all(ops)),
     };
-    scorer = { name: 'deterministic', score: jest.fn().mockReturnValue(scoreResult) };
+    scorer = { name: 'deterministic', score: jest.fn().mockResolvedValue(scoreResult) };
     service = new MatchingService(prisma as unknown as PrismaService, scorer);
   });
 

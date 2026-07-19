@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmbeddingService } from '../embeddings/embedding.service';
 import { JobSearchService } from '../search/job-search.service';
 
 export interface HealthStatus {
@@ -8,6 +9,7 @@ export interface HealthStatus {
   services: {
     database: 'up' | 'down';
     search: 'up' | 'down' | 'disabled';
+    matching: 'semantic' | 'deterministic';
   };
 }
 
@@ -16,6 +18,7 @@ export class HealthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly search: JobSearchService,
+    private readonly embeddings: EmbeddingService,
   ) {}
 
   async check(): Promise<HealthStatus> {
@@ -28,6 +31,7 @@ export class HealthService {
       services: {
         database: databaseUp ? 'up' : 'down',
         search,
+        matching: this.embeddings.enabled ? 'semantic' : 'deterministic',
       },
     };
   }

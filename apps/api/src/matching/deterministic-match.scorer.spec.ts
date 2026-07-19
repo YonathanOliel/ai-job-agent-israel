@@ -73,8 +73,8 @@ const baseJob = (overrides: Partial<Job> = {}): Job => ({
 describe('DeterministicMatchScorer', () => {
   const scorer = new DeterministicMatchScorer();
 
-  it('scores a strong match highly with explanations', () => {
-    const result = scorer.score(baseProfile(), baseJob());
+  it('scores a strong match highly with explanations', async () => {
+    const result = await scorer.score(baseProfile(), baseJob());
 
     expect(result.overall).toBeGreaterThanOrEqual(70);
     expect(result.dimensions.experience.score).toBe(100);
@@ -90,16 +90,16 @@ describe('DeterministicMatchScorer', () => {
     );
   });
 
-  it('treats a remote job as location-independent', () => {
-    const result = scorer.score(
+  it('treats a remote job as location-independent', async () => {
+    const result = await scorer.score(
       baseProfile({ preferredLocations: ['haifa'] }),
       baseJob({ isRemote: true }),
     );
     expect(result.dimensions.location.score).toBe(100);
   });
 
-  it('flags a step-up role as growth but weaker on experience', () => {
-    const result = scorer.score(
+  it('flags a step-up role as growth but weaker on experience', async () => {
+    const result = await scorer.score(
       baseProfile({ seniority: SeniorityLevel.JUNIOR, yearsExperience: 2 }),
       baseJob({ seniority: SeniorityLevel.LEAD }),
     );
@@ -107,14 +107,14 @@ describe('DeterministicMatchScorer', () => {
     expect(result.dimensions.growth.score).toBeGreaterThan(70);
   });
 
-  it('lowers confidence when data is sparse', () => {
+  it('lowers confidence when data is sparse', async () => {
     const sparse = baseProfile({
       technologies: [],
       skills: [],
       yearsExperience: null,
       seniority: null,
     });
-    const result = scorer.score(sparse, baseJob());
+    const result = await scorer.score(sparse, baseJob());
     expect(result.confidence.score).toBeLessThan(60);
   });
 });

@@ -1,6 +1,6 @@
 // Prisma schema for AI Job Agent Israel.
 // Initial data foundation: users, resumes, career profiles, jobs, matches.
-// Vector/embedding columns are introduced in the matching-engine milestone.
+// Vector/embedding columns power the semantic matching engine (pgvector).
 
 generator client {
   provider = "prisma-client-js"
@@ -225,6 +225,12 @@ model CareerProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// Semantic embedding for AI matching (pgvector, cosine similarity).
+  /// Populated best-effort by EmbeddingService; null until computed or when
+  /// embeddings are disabled (no OPENAI_API_KEY). Prisma Client does not
+  /// expose Unsupported columns — read/write via raw SQL only.
+  embedding Unsupported("vector(1536)")?
+
   @@map("career_profiles")
 }
 
@@ -263,6 +269,10 @@ model Job {
   lastSeenAt      DateTime?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+
+  /// Semantic embedding for AI matching (pgvector, cosine similarity). See
+  /// CareerProfile.embedding for the same convention.
+  embedding Unsupported("vector(1536)")?
 
   matches JobMatch[]
 

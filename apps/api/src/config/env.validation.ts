@@ -41,6 +41,10 @@ export const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
   OPENAI_MODEL: z.string().min(1).default('gpt-4o-mini'),
+  // Semantic matching embeddings. Reuses OPENAI_API_KEY; when unset, semantic
+  // scoring is disabled and matching falls back to the deterministic scorer
+  // (zero regression). text-embedding-3-small = 1536 dimensions.
+  OPENAI_EMBEDDING_MODEL: z.string().min(1).default('text-embedding-3-small'),
   ANTHROPIC_API_KEY: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
   // Career-profile extraction strategy. "heuristic" works offline (no API key);

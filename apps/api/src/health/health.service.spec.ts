@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmbeddingService } from '../embeddings/embedding.service';
 import { JobSearchService } from '../search/job-search.service';
 import { HealthService } from './health.service';
 
@@ -7,6 +8,7 @@ describe('HealthService', () => {
   const buildService = async (
     databaseUp: boolean,
     search: { enabled: boolean; connected?: boolean } = { enabled: false },
+    embeddingsEnabled = false,
   ): Promise<HealthService> => {
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -21,6 +23,10 @@ describe('HealthService', () => {
             enabled: search.enabled,
             ping: jest.fn().mockResolvedValue(search.connected ?? false),
           },
+        },
+        {
+          provide: EmbeddingService,
+          useValue: { enabled: embeddingsEnabled },
         },
       ],
     }).compile();
@@ -62,5 +68,21 @@ describe('HealthService', () => {
     const result = await service.check();
 
     expect(result.services.search).toBe('down');
+  });
+
+  it('reports matching "deterministic" when no embedding provider is configured', async () => {
+    const service = await buildService(true, { enabled: false }, false);
+
+    const result = await service.check();
+
+    expect(result.services.matching).toBe('deterministic');
+  });
+
+  it('reports matching "semantic" when an embedding provider is configured', async () => {
+    const service = await buildService(true, { enabled: false }, true);
+
+    const result = await service.check();
+
+    expect(result.services.matching).toBe('semantic');
   });
 });

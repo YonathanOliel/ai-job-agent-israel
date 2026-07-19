@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { CareerProfile, LanguageCode, Prisma, ResumeStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmbeddingService } from '../embeddings/embedding.service';
 import { PROFILE_EXTRACTOR, type ProfileExtractor } from './profile-extractor.types';
 import type { StructuredProfile } from './structured-profile.schema';
 
@@ -13,6 +14,7 @@ import type { StructuredProfile } from './structured-profile.schema';
 export class CareerProfileService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly embeddings: EmbeddingService,
     @Inject(PROFILE_EXTRACTOR) private readonly extractor: ProfileExtractor,
   ) {}
 
@@ -33,11 +35,13 @@ export class CareerProfileService {
     );
     const data = this.buildData(structured, resume.id);
 
-    return this.prisma.careerProfile.upsert({
+    const profile = await this.prisma.careerProfile.upsert({
       where: { userId },
       create: { userId, ...data },
       update: data,
     });
+    await this.embeddings.embedProfile(profile);
+    return profile;
   }
 
   async get(userId: string): Promise<CareerProfile> {
