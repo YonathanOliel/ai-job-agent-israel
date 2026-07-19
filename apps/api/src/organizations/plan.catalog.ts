@@ -1,28 +1,28 @@
-/** Subscription plans and their per-organization entitlements. */
-export type PlanKey = 'free' | 'pro' | 'enterprise';
+/**
+ * Plan catalog. The product is currently free for everyone: a single `free`
+ * plan with unlimited entitlements (null = unlimited). The structure is kept so
+ * paid tiers can be reintroduced later without reworking callers.
+ */
+export type PlanKey = 'free';
 
 export interface PlanLimits {
-  maxMembers: number;
-  talentSearchesPerMonth: number;
-  apiCallsPerMonth: number;
+  /** null means unlimited. */
+  maxMembers: number | null;
+  talentSearchesPerMonth: number | null;
+  apiCallsPerMonth: number | null;
   priceMonthlyUsd: number;
 }
 
 export const PLAN_CATALOG: Record<PlanKey, PlanLimits> = {
-  free: { maxMembers: 3, talentSearchesPerMonth: 20, apiCallsPerMonth: 1000, priceMonthlyUsd: 0 },
-  pro: {
-    maxMembers: 15,
-    talentSearchesPerMonth: 500,
-    apiCallsPerMonth: 50000,
-    priceMonthlyUsd: 99,
-  },
-  enterprise: {
-    maxMembers: 1000,
-    talentSearchesPerMonth: 100000,
-    apiCallsPerMonth: 5000000,
-    priceMonthlyUsd: 1500,
+  free: {
+    maxMembers: null,
+    talentSearchesPerMonth: null,
+    apiCallsPerMonth: null,
+    priceMonthlyUsd: 0,
   },
 };
+
+export const DEFAULT_PLAN: PlanKey = 'free';
 
 export const METERED_METRICS = ['talent_search', 'api_call'] as const;
 export type MeteredMetric = (typeof METERED_METRICS)[number];
@@ -31,7 +31,7 @@ export function isPlanKey(value: string): value is PlanKey {
   return value in PLAN_CATALOG;
 }
 
-/** Current billing period key, e.g. "2026-07". */
+/** Current usage period key, e.g. "2026-07". */
 export function currentPeriod(now: Date = new Date()): string {
   return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
 }
