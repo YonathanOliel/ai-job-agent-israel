@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Job, JobStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { JobSearchService } from '../search/job-search.service';
+import { JobDedupService } from './job-dedup.service';
 import { buildContentHash, buildDedupeKey } from './job-dedup.util';
 import { JOB_SOURCES, type JobSource, type RawJob } from './job-source.types';
 
@@ -22,6 +23,7 @@ export class JobIngestionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly search: JobSearchService,
+    private readonly dedup: JobDedupService,
     @Inject(JOB_SOURCES) private readonly sources: JobSource[],
   ) {}
 
@@ -36,6 +38,13 @@ export class JobIngestionService {
         // A single failing source must not abort ingestion of the others.
         this.logger.error(`Source "${source.name}" failed during ingestion`, error as Error);
       }
+    }
+    // Collapse cross-source duplicates once all sources are in; never fail
+    // ingestion because of a dedup error.
+    try {
+      await this.dedup.reconcile();
+    } catch (error) {
+      this.logger.error('Deduplication failed after ingestion', error as Error);
     }
     return { ingested, sources: succeeded };
   }

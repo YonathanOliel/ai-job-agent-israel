@@ -12,6 +12,7 @@ import { Job, UserRole } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JobFiltersDto } from './dto/job-filters.dto';
 import { IngestionQueueService } from './ingestion-queue.service';
+import { JobDedupService, type DedupResult } from './job-dedup.service';
 import { JobIngestionService, type IngestionResult } from './job-ingestion.service';
 import { JobsService, type PaginatedJobs } from './jobs.service';
 
@@ -21,6 +22,7 @@ export class JobsController {
     private readonly jobs: JobsService,
     private readonly ingestion: JobIngestionService,
     private readonly queue: IngestionQueueService,
+    private readonly dedup: JobDedupService,
   ) {}
 
   @Get()
@@ -52,5 +54,12 @@ export class JobsController {
   @HttpCode(HttpStatus.OK)
   reindex(): Promise<{ indexed: number }> {
     return this.jobs.reindex();
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Post('dedup')
+  @HttpCode(HttpStatus.OK)
+  runDedup(): Promise<DedupResult> {
+    return this.dedup.reconcile();
   }
 }

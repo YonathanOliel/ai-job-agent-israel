@@ -8,6 +8,7 @@ import { CareerjetJobSource } from './careerjet-job.source';
 import { FindworkJobSource } from './findwork-job.source';
 import { GreenhouseJobSource } from './greenhouse-job.source';
 import { IngestionQueueService } from './ingestion-queue.service';
+import { JobDedupService } from './job-dedup.service';
 import { JobIngestionService } from './job-ingestion.service';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
@@ -24,6 +25,7 @@ import { TelegramJobSource } from './telegram-job.source';
   providers: [
     JobsService,
     JobIngestionService,
+    JobDedupService,
     IngestionQueueService,
     RemotiveJobSource,
     ArbeitnowJobSource,

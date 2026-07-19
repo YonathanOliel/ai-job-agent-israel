@@ -68,6 +68,7 @@ enum JobStatus {
   ACTIVE
   CLOSED
   ARCHIVED
+  DUPLICATE
 }
 
 enum MatchStatus {
@@ -190,9 +191,12 @@ model Job {
   status          JobStatus        @default(ACTIVE)
   // Deduplication & freshness tracking (populated at ingestion).
   // dedupeKey groups the same posting seen across multiple sources;
-  // contentHash detects changes to a posting's content.
+  // contentHash detects changes to a posting's content. When a posting is a
+  // cross-source duplicate its status is DUPLICATE and canonicalId points at
+  // the kept (canonical) job.
   dedupeKey       String?
   contentHash     String?
+  canonicalId     String?          @db.Uuid
   firstSeenAt     DateTime?
   lastSeenAt      DateTime?
   createdAt       DateTime         @default(now())

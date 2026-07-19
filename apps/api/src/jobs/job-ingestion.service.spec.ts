@@ -1,5 +1,6 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { JobSearchService } from '../search/job-search.service';
+import { JobDedupService } from './job-dedup.service';
 import { JobIngestionService } from './job-ingestion.service';
 import type { JobSource, RawJob } from './job-source.types';
 
@@ -11,6 +12,7 @@ describe('JobIngestionService', () => {
 
   let prisma: { job: { upsert: jest.Mock } };
   let search: { index: jest.Mock };
+  let dedup: { reconcile: jest.Mock };
   let source: JobSource;
   let service: JobIngestionService;
 
@@ -19,10 +21,12 @@ describe('JobIngestionService', () => {
       job: { upsert: jest.fn().mockImplementation((args) => ({ id: 'x', ...args.create })) },
     };
     search = { index: jest.fn().mockResolvedValue(undefined) };
+    dedup = { reconcile: jest.fn().mockResolvedValue({ groups: 0, duplicates: 0, updated: 0 }) };
     source = { name: 'seed', fetchJobs: jest.fn().mockResolvedValue(jobs) };
     service = new JobIngestionService(
       prisma as unknown as PrismaService,
       search as unknown as JobSearchService,
+      dedup as unknown as JobDedupService,
       [source],
     );
   });
@@ -34,6 +38,7 @@ describe('JobIngestionService', () => {
     expect(result.sources).toEqual(['seed']);
     expect(prisma.job.upsert).toHaveBeenCalledTimes(2);
     expect(search.index).toHaveBeenCalledTimes(2);
+    expect(dedup.reconcile).toHaveBeenCalledTimes(1);
     expect(prisma.job.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { source_externalId: { source: 'seed', externalId: 'a' } },
