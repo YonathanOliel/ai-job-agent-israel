@@ -16,6 +16,7 @@ const SOURCE_TRUST: Record<string, number> = {
   arbeitnow: 40,
   remoteok: 40,
   telegram: 30,
+  referral: 35,
   seed: 10,
 };
 

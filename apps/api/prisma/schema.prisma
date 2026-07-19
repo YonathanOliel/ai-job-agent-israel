@@ -95,6 +95,14 @@ enum MatchStatus {
   DISMISSED
 }
 
+/// Lifecycle of a user-submitted job referral (compliant alternative to
+/// scraping LinkedIn/Facebook: users share a posting they already saw).
+enum ReferralStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 enum AuditAction {
   USER_REGISTERED
   LOGIN_SUCCEEDED
@@ -123,6 +131,7 @@ model User {
   refreshTokens RefreshToken[]
   auditLogs     AuditLog[]
   orgMemberships OrganizationMembership[]
+  jobReferrals  JobReferral[]
 
   @@map("users")
 }
@@ -302,6 +311,27 @@ model JobMatch {
   @@index([userId, status])
   @@index([jobId])
   @@map("job_matches")
+}
+
+/// A user-submitted job referral: compliant alternative to scraping LinkedIn
+/// or Facebook groups. The user pastes a URL or the raw posting text they
+/// already saw; it is normalized (heuristically or via LLM) and, if it's a
+/// genuine Israeli tech role, ingested as a low-trust "referral" source job
+/// that the existing dedup engine merges with any official-source duplicate.
+model JobReferral {
+  id        String         @id @default(uuid()) @db.Uuid
+  userId    String         @db.Uuid
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rawUrl    String?
+  rawText   String
+  status    ReferralStatus @default(PENDING)
+  rejectionReason String?
+  resultingJobId  String?  @db.Uuid
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([userId])
+  @@map("job_referrals")
 }
 
 /// Registry of ingestion sources with per-run health. Seeded from the enabled

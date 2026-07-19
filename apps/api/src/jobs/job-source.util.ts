@@ -77,6 +77,42 @@ export function isIsraelLocation(text: string): boolean {
   return ISRAEL_LOCATION.test(text ?? '');
 }
 
+/** Specific Israeli cities (English + Hebrew) mapped to a canonical display name. */
+const ISRAEL_CITIES: Array<{ pattern: RegExp; name: string }> = [
+  { pattern: /tel[\s-]?aviv|תל[\s-]?אביב/i, name: 'Tel Aviv' },
+  { pattern: /herzliya|הרצליה/i, name: 'Herzliya' },
+  { pattern: /haifa|חיפה/i, name: 'Haifa' },
+  { pattern: /jerusalem|ירושלים/i, name: 'Jerusalem' },
+  { pattern: /netanya|נתניה/i, name: 'Netanya' },
+  { pattern: /ra'?anana|רעננה/i, name: "Ra'anana" },
+  { pattern: /petah|פתח[\s-]?תקווה/i, name: 'Petah Tikva' },
+  { pattern: /beer[\s-]?sheva|באר[\s-]?שבע/i, name: 'Beer Sheva' },
+  { pattern: /yokneam|יקנעם/i, name: 'Yokneam' },
+  { pattern: /caesarea|קיסריה/i, name: 'Caesarea' },
+  { pattern: /rehovot|רחובות/i, name: 'Rehovot' },
+  { pattern: /ramat[\s-]?gan|רמת[\s-]?גן/i, name: 'Ramat Gan' },
+  { pattern: /givatayim|גבעתיים/i, name: 'Givatayim' },
+  { pattern: /kfar[\s-]?saba|כפר[\s-]?סבא/i, name: 'Kfar Saba' },
+  { pattern: /hod[\s-]?hasharon/i, name: 'Hod HaSharon' },
+  { pattern: /modiin|מודיעין/i, name: 'Modiin' },
+  { pattern: /or[\s-]?yehuda/i, name: 'Or Yehuda' },
+];
+
+/**
+ * Best-effort Israeli city guess from free text, for sources (e.g. referrals)
+ * that don't provide a structured location field. Falls back to "Israel" when
+ * the country is mentioned without a specific recognized city, and to `null`
+ * when there is no Israel signal at all.
+ */
+export function guessIsraeliCity(text: string): string | null {
+  for (const { pattern, name } of ISRAEL_CITIES) {
+    if (pattern.test(text ?? '')) {
+      return name;
+    }
+  }
+  return isIsraelLocation(text) ? 'Israel' : null;
+}
+
 /**
  * Whole-word match for a term. Alphanumeric terms use word boundaries (so "go"
  * does not match "Goldhausen"); terms with symbols (node.js, c#, .net) fall back

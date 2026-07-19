@@ -11,6 +11,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { MatchingModule } from './matching/matching.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ReferralsModule } from './referrals/referrals.module';
 import { ResumesModule } from './resumes/resumes.module';
 import { SearchModule } from './search/search.module';
 import { SecurityModule } from './security/security.module';
@@ -37,6 +38,7 @@ import { StorageModule } from './storage/storage.module';
     JobsModule,
     MatchingModule,
     OrganizationsModule,
+    ReferralsModule,
     HealthModule,
     AdminModule,
   ],

@@ -15,6 +15,7 @@ const SOURCE_TYPES: Record<string, string> = {
   arbeitnow: 'BOARD',
   remoteok: 'BOARD',
   telegram: 'COMMUNITY',
+  referral: 'COMMUNITY',
   seed: 'SEED',
 };
 

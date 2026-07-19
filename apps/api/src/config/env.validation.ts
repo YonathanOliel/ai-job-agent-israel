@@ -50,6 +50,10 @@ export const envSchema = z.object({
   // Career-profile extraction strategy. "heuristic" works offline (no API key);
   // "llm" uses the configured AI provider for richer extraction.
   PROFILE_EXTRACTOR: z.enum(['heuristic', 'llm']).default('heuristic'),
+  // Referral normalization strategy (compliant alternative to LinkedIn/Facebook
+  // scraping: users submit a posting they already saw). "heuristic" works
+  // offline; "llm" uses the configured AI provider for richer extraction.
+  REFERRAL_EXTRACTOR: z.enum(['heuristic', 'llm']).default('heuristic'),
   // Real job source (Remotive public API — no key, returns real apply links).
   REMOTIVE_API_URL: z.string().url().default('https://remotive.com/api/remote-jobs'),
   REMOTIVE_CATEGORY: z.string().default('software-dev'),
