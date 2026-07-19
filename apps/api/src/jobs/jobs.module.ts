@@ -4,11 +4,14 @@ import type { Env } from '../config/env.validation';
 import { JOB_SOURCES, type JobSource } from './job-source.types';
 import { ArbeitnowJobSource } from './arbeitnow-job.source';
 import { AshbyJobSource } from './ashby-job.source';
+import { CareerjetJobSource } from './careerjet-job.source';
+import { FindworkJobSource } from './findwork-job.source';
 import { GreenhouseJobSource } from './greenhouse-job.source';
 import { JobIngestionService } from './job-ingestion.service';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
 import { JoobleJobSource } from './jooble-job.source';
+import { JSearchJobSource } from './jsearch-job.source';
 import { LeverJobSource } from './lever-job.source';
 import { RemoteOkJobSource } from './remoteok-job.source';
 import { RemotiveJobSource } from './remotive-job.source';
@@ -28,6 +31,9 @@ import { TelegramJobSource } from './telegram-job.source';
     GreenhouseJobSource,
     LeverJobSource,
     AshbyJobSource,
+    JSearchJobSource,
+    CareerjetJobSource,
+    FindworkJobSource,
     SeedJobSource,
     {
       provide: JOB_SOURCES,
@@ -41,6 +47,9 @@ import { TelegramJobSource } from './telegram-job.source';
         GreenhouseJobSource,
         LeverJobSource,
         AshbyJobSource,
+        JSearchJobSource,
+        CareerjetJobSource,
+        FindworkJobSource,
         SeedJobSource,
       ],
       useFactory: (
@@ -53,6 +62,9 @@ import { TelegramJobSource } from './telegram-job.source';
         greenhouse: GreenhouseJobSource,
         lever: LeverJobSource,
         ashby: AshbyJobSource,
+        jsearch: JSearchJobSource,
+        careerjet: CareerjetJobSource,
+        findwork: FindworkJobSource,
         seed: SeedJobSource,
       ): JobSource[] => {
         // Public, no-key real tech sources are always on.
@@ -74,6 +86,16 @@ import { TelegramJobSource } from './telegram-job.source';
         }
         if (config.get('ASHBY_COMPANIES', { infer: true }).trim()) {
           sources.push(ashby);
+        }
+        // Keyed aggregators — enabled automatically once their key is configured.
+        if (config.get('RAPIDAPI_KEY', { infer: true })) {
+          sources.push(jsearch);
+        }
+        if (config.get('CAREERJET_AFFID', { infer: true })) {
+          sources.push(careerjet);
+        }
+        if (config.get('FINDWORK_API_KEY', { infer: true })) {
+          sources.push(findwork);
         }
         if (config.get('ENABLE_SEED_JOBS', { infer: true })) {
           sources.push(seed);

@@ -61,6 +61,18 @@ export const envSchema = z.object({
   GREENHOUSE_COMPANIES: z.string().default(''),
   LEVER_COMPANIES: z.string().default(''),
   ASHBY_COMPANIES: z.string().default(''),
+  // JSearch (Google-for-Jobs aggregator via RapidAPI). Enabled when RAPIDAPI_KEY
+  // is set. Broad Israeli coverage incl. LinkedIn/Indeed-sourced postings.
+  RAPIDAPI_KEY: z.string().optional(),
+  JSEARCH_HOST: z.string().default('jsearch.p.rapidapi.com'),
+  JSEARCH_QUERY: z.string().default('software developer jobs in israel'),
+  // Careerjet public API. Enabled when CAREERJET_AFFID (free affiliate id) is set.
+  CAREERJET_AFFID: z.string().optional(),
+  CAREERJET_KEYWORDS: z.string().default('developer'),
+  CAREERJET_LOCATION: z.string().default('Israel'),
+  // Findwork.dev API. Enabled when FINDWORK_API_KEY is set.
+  FINDWORK_API_KEY: z.string().optional(),
+  FINDWORK_SEARCH: z.string().default('developer'),
   // Max jobs to ingest per source per run.
   JOB_INGEST_LIMIT: z.coerce.number().int().positive().max(200).default(50),
   // Include the built-in sample jobs alongside real sources (dev/testing).
