@@ -11,6 +11,7 @@ import { IngestionQueueService } from './ingestion-queue.service';
 import { JobDedupService } from './job-dedup.service';
 import { JobIngestionService } from './job-ingestion.service';
 import { JobStatsService } from './job-stats.service';
+import { SourceRegistryService } from './source-registry.service';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
 import { JoobleJobSource } from './jooble-job.source';
@@ -28,6 +29,7 @@ import { TelegramJobSource } from './telegram-job.source';
     JobIngestionService,
     JobDedupService,
     JobStatsService,
+    SourceRegistryService,
     IngestionQueueService,
     RemotiveJobSource,
     ArbeitnowJobSource,

@@ -8,7 +8,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { Job, UserRole } from '@prisma/client';
+import { Job, Source, UserRole } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JobFiltersDto } from './dto/job-filters.dto';
 import { IngestionQueueService } from './ingestion-queue.service';
@@ -16,6 +16,7 @@ import { JobDedupService, type DedupResult } from './job-dedup.service';
 import { JobIngestionService, type IngestionResult } from './job-ingestion.service';
 import { JobStatsService, type JobStats } from './job-stats.service';
 import { JobsService, type PaginatedJobs } from './jobs.service';
+import { SourceRegistryService } from './source-registry.service';
 
 @Controller('jobs')
 export class JobsController {
@@ -25,6 +26,7 @@ export class JobsController {
     private readonly queue: IngestionQueueService,
     private readonly dedup: JobDedupService,
     private readonly stats: JobStatsService,
+    private readonly registry: SourceRegistryService,
   ) {}
 
   @Get()
@@ -36,6 +38,12 @@ export class JobsController {
   @Get('stats')
   getStats(): Promise<JobStats> {
     return this.stats.compute();
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Get('sources')
+  getSources(): Promise<Source[]> {
+    return this.registry.list();
   }
 
   @Get(':id')

@@ -71,6 +71,12 @@ enum JobStatus {
   DUPLICATE
 }
 
+enum SourceRunStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 enum MatchStatus {
   NEW
   VIEWED
@@ -230,6 +236,24 @@ model JobMatch {
   @@index([userId, status])
   @@index([jobId])
   @@map("job_matches")
+}
+
+/// Registry of ingestion sources with per-run health. Seeded from the enabled
+/// connectors; the source of truth for Discovery and the Admin command center.
+model Source {
+  id           String           @id @default(uuid()) @db.Uuid
+  key          String           @unique
+  type         String
+  enabled      Boolean          @default(true)
+  lastRunAt    DateTime?
+  lastStatus   SourceRunStatus?
+  lastError    String?
+  lastJobCount Int?
+  totalRuns    Int              @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@map("sources")
 }
 
 model RefreshToken {

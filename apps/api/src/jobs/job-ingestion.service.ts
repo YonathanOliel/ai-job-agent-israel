@@ -1,10 +1,11 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Job, JobStatus, Prisma } from '@prisma/client';
+import { Job, JobStatus, Prisma, SourceRunStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { JobSearchService } from '../search/job-search.service';
 import { JobDedupService } from './job-dedup.service';
 import { buildContentHash, buildDedupeKey } from './job-dedup.util';
 import { JOB_SOURCES, type JobSource, type RawJob } from './job-source.types';
+import { SourceRegistryService } from './source-registry.service';
 
 export interface IngestionResult {
   ingested: number;
@@ -24,6 +25,7 @@ export class JobIngestionService {
     private readonly prisma: PrismaService,
     private readonly search: JobSearchService,
     private readonly dedup: JobDedupService,
+    private readonly registry: SourceRegistryService,
     @Inject(JOB_SOURCES) private readonly sources: JobSource[],
   ) {}
 
@@ -64,13 +66,24 @@ export class JobIngestionService {
   }
 
   private async runSource(source: JobSource): Promise<number> {
-    const jobs = await source.fetchJobs();
-    for (const job of jobs) {
-      const persisted = await this.upsert(source.name, job);
-      await this.search.index(persisted);
+    try {
+      const jobs = await source.fetchJobs();
+      for (const job of jobs) {
+        const persisted = await this.upsert(source.name, job);
+        await this.search.index(persisted);
+      }
+      this.logger.log(`Ingested ${jobs.length} jobs from "${source.name}"`);
+      await this.registry.recordRun(source.name, SourceRunStatus.SUCCESS, jobs.length);
+      return jobs.length;
+    } catch (error) {
+      await this.registry.recordRun(
+        source.name,
+        SourceRunStatus.FAILED,
+        0,
+        (error as Error).message,
+      );
+      throw error;
     }
-    this.logger.log(`Ingested ${jobs.length} jobs from "${source.name}"`);
-    return jobs.length;
   }
 
   private async upsert(source: string, job: RawJob): Promise<Job> {
