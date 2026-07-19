@@ -10,6 +10,7 @@ import { GreenhouseJobSource } from './greenhouse-job.source';
 import { IngestionQueueService } from './ingestion-queue.service';
 import { JobDedupService } from './job-dedup.service';
 import { JobIngestionService } from './job-ingestion.service';
+import { JobStatsService } from './job-stats.service';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
 import { JoobleJobSource } from './jooble-job.source';
@@ -26,6 +27,7 @@ import { TelegramJobSource } from './telegram-job.source';
     JobsService,
     JobIngestionService,
     JobDedupService,
+    JobStatsService,
     IngestionQueueService,
     RemotiveJobSource,
     ArbeitnowJobSource,

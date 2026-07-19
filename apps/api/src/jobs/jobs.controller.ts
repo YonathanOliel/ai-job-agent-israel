@@ -14,6 +14,7 @@ import { JobFiltersDto } from './dto/job-filters.dto';
 import { IngestionQueueService } from './ingestion-queue.service';
 import { JobDedupService, type DedupResult } from './job-dedup.service';
 import { JobIngestionService, type IngestionResult } from './job-ingestion.service';
+import { JobStatsService, type JobStats } from './job-stats.service';
 import { JobsService, type PaginatedJobs } from './jobs.service';
 
 @Controller('jobs')
@@ -23,11 +24,18 @@ export class JobsController {
     private readonly ingestion: JobIngestionService,
     private readonly queue: IngestionQueueService,
     private readonly dedup: JobDedupService,
+    private readonly stats: JobStatsService,
   ) {}
 
   @Get()
   list(@Query() filters: JobFiltersDto): Promise<PaginatedJobs> {
     return this.jobs.list(filters);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Get('stats')
+  getStats(): Promise<JobStats> {
+    return this.stats.compute();
   }
 
   @Get(':id')
