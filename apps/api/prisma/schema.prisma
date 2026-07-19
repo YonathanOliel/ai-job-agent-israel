@@ -156,6 +156,21 @@ model OrganizationMembership {
   @@map("organization_memberships")
 }
 
+/// Monthly metered usage per organization (talent searches, API calls, …).
+/// Enforced against the org's plan limits from the plan catalog.
+model UsageRecord {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  metric         String
+  period         String
+  count          Int      @default(0)
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, metric, period])
+  @@index([organizationId, period])
+  @@map("usage_records")
+}
+
 model Resume {
   id         String         @id @default(uuid()) @db.Uuid
   userId     String         @db.Uuid

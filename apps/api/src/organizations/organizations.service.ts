@@ -3,6 +3,7 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { Organization, OrganizationMembership, OrgRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
+import { BillingService } from './billing.service';
 
 export interface OrgMember {
   userId: string;
@@ -22,6 +23,7 @@ export class OrganizationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly users: UsersService,
+    private readonly billing: BillingService,
   ) {}
 
   async create(ownerUserId: string, name: string): Promise<Organization> {
@@ -81,6 +83,13 @@ export class OrganizationsService {
     const user = await this.users.findByEmail(email);
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+    const existing = await this.prisma.organizationMembership.findUnique({
+      where: { organizationId_userId: { organizationId, userId: user.id } },
+    });
+    // Only new seats count against the plan limit; role changes don't.
+    if (!existing) {
+      await this.billing.assertCanAddMember(organizationId);
     }
     const membership = await this.prisma.organizationMembership.upsert({
       where: { organizationId_userId: { organizationId, userId: user.id } },

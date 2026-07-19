@@ -1,9 +1,19 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
-import { Organization } from '@prisma/client';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
+import { Organization, OrgRole } from '@prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/jwt-payload.type';
+import { BillingService, type BillingSummary } from './billing.service';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
+import { SetPlanDto } from './dto/set-plan.dto';
 import { OrganizationsService, type OrgMember } from './organizations.service';
 
 /**
@@ -12,7 +22,10 @@ import { OrganizationsService, type OrgMember } from './organizations.service';
  */
 @Controller('orgs')
 export class OrganizationsController {
-  constructor(private readonly orgs: OrganizationsService) {}
+  constructor(
+    private readonly orgs: OrganizationsService,
+    private readonly billing: BillingService,
+  ) {}
 
   @Post()
   create(
@@ -42,5 +55,27 @@ export class OrganizationsController {
     @Body() body: AddMemberDto,
   ): Promise<OrgMember> {
     return this.orgs.addMember(user.id, orgId, body.email, body.role);
+  }
+
+  @Get(':orgId/billing')
+  async billingSummary(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('orgId', ParseUUIDPipe) orgId: string,
+  ): Promise<BillingSummary> {
+    await this.orgs.requireMembership(user.id, orgId);
+    return this.billing.getSummary(orgId);
+  }
+
+  @Post(':orgId/plan')
+  async setPlan(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('orgId', ParseUUIDPipe) orgId: string,
+    @Body() body: SetPlanDto,
+  ): Promise<BillingSummary> {
+    const membership = await this.orgs.requireMembership(user.id, orgId);
+    if (membership.role !== OrgRole.OWNER) {
+      throw new ForbiddenException('Only the owner can change the plan');
+    }
+    return this.billing.setPlan(orgId, body.plan);
   }
 }

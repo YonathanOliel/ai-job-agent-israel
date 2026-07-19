@@ -2,9 +2,12 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { OrgRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
+import { BillingService } from './billing.service';
 import { OrganizationsService } from './organizations.service';
 
 describe('OrganizationsService', () => {
+  const buildBilling = () =>
+    ({ assertCanAddMember: jest.fn().mockResolvedValue(undefined) }) as unknown as BillingService;
   const buildPrisma = () => ({
     organization: {
       create: jest.fn().mockResolvedValue({ id: 'o1', name: 'Acme', slug: 'acme-abc123' }),
@@ -21,6 +24,7 @@ describe('OrganizationsService', () => {
     const service = new OrganizationsService(
       prisma as unknown as PrismaService,
       {} as unknown as UsersService,
+      buildBilling(),
     );
 
     await service.create('user-1', 'Acme');
@@ -37,6 +41,7 @@ describe('OrganizationsService', () => {
     const service = new OrganizationsService(
       prisma as unknown as PrismaService,
       {} as unknown as UsersService,
+      buildBilling(),
     );
 
     await expect(service.requireMembership('intruder', 'o1')).rejects.toBeInstanceOf(
@@ -50,6 +55,7 @@ describe('OrganizationsService', () => {
     const service = new OrganizationsService(
       prisma as unknown as PrismaService,
       {} as unknown as UsersService,
+      buildBilling(),
     );
 
     await expect(
@@ -70,6 +76,7 @@ describe('OrganizationsService', () => {
     const service = new OrganizationsService(
       prisma as unknown as PrismaService,
       users as unknown as UsersService,
+      buildBilling(),
     );
 
     const member = await service.addMember('admin-1', 'o1', 'new@example.com', OrgRole.MEMBER);
