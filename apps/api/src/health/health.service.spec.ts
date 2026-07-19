@@ -1,15 +1,26 @@
 import { Test } from '@nestjs/testing';
 import { PrismaService } from '../prisma/prisma.service';
+import { JobSearchService } from '../search/job-search.service';
 import { HealthService } from './health.service';
 
 describe('HealthService', () => {
-  const buildService = async (databaseUp: boolean): Promise<HealthService> => {
+  const buildService = async (
+    databaseUp: boolean,
+    search: { enabled: boolean; connected?: boolean } = { enabled: false },
+  ): Promise<HealthService> => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         HealthService,
         {
           provide: PrismaService,
           useValue: { isHealthy: jest.fn().mockResolvedValue(databaseUp) },
+        },
+        {
+          provide: JobSearchService,
+          useValue: {
+            enabled: search.enabled,
+            ping: jest.fn().mockResolvedValue(search.connected ?? false),
+          },
         },
       ],
     }).compile();
@@ -24,6 +35,7 @@ describe('HealthService', () => {
 
     expect(result.status).toBe('ok');
     expect(result.services.database).toBe('up');
+    expect(result.services.search).toBe('disabled');
     expect(new Date(result.timestamp).toString()).not.toBe('Invalid Date');
   });
 
@@ -34,5 +46,21 @@ describe('HealthService', () => {
 
     expect(result.status).toBe('degraded');
     expect(result.services.database).toBe('down');
+  });
+
+  it('reports search "up" when Elasticsearch is enabled and reachable', async () => {
+    const service = await buildService(true, { enabled: true, connected: true });
+
+    const result = await service.check();
+
+    expect(result.services.search).toBe('up');
+  });
+
+  it('reports search "down" when Elasticsearch is enabled but unreachable', async () => {
+    const service = await buildService(true, { enabled: true, connected: false });
+
+    const result = await service.check();
+
+    expect(result.services.search).toBe('down');
   });
 });

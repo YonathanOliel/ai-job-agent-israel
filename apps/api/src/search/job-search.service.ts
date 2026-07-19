@@ -63,6 +63,19 @@ export class JobSearchService implements OnModuleInit {
     return this.client !== null;
   }
 
+  /** Liveness check of the search backend; false when disabled or unreachable. */
+  async ping(): Promise<boolean> {
+    if (!this.client) {
+      return false;
+    }
+    try {
+      await this.client.ping();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async onModuleInit(): Promise<void> {
     if (!this.client) {
       return;
