@@ -37,4 +37,11 @@ export class JobsController {
   ingest(): Promise<IngestionResult> {
     return this.ingestion.ingest();
   }
+
+  @Roles(UserRole.ADMIN)
+  @Post('reindex')
+  @HttpCode(HttpStatus.OK)
+  reindex(): Promise<{ indexed: number }> {
+    return this.jobs.reindex();
+  }
 }

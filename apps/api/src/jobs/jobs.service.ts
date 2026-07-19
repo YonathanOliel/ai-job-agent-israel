@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Job, JobStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { JobSearchService } from '../search/job-search.service';
 import { JobFiltersDto } from './dto/job-filters.dto';
 
 export interface PaginatedJobs {
@@ -12,9 +13,50 @@ export interface PaginatedJobs {
 
 @Injectable()
 export class JobsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(JobsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly search: JobSearchService,
+  ) {}
 
   async list(filters: JobFiltersDto): Promise<PaginatedJobs> {
+    // Use Elasticsearch for free-text search (relevance + fuzzy) when available;
+    // fall back to PostgreSQL for browse and whenever Elasticsearch is down.
+    if (this.search.enabled && filters.search?.trim()) {
+      try {
+        return await this.searchViaElastic(filters);
+      } catch (error) {
+        this.logger.warn(
+          `Elasticsearch search failed, falling back to SQL: ${(error as Error).message}`,
+        );
+      }
+    }
+    return this.listViaSql(filters);
+  }
+
+  /** Reindexes every active job into the search backend. Returns the count. */
+  async reindex(): Promise<{ indexed: number }> {
+    const jobs = await this.prisma.job.findMany({ where: { status: JobStatus.ACTIVE } });
+    const indexed = await this.search.bulkIndex(jobs);
+    return { indexed };
+  }
+
+  private async searchViaElastic(filters: JobFiltersDto): Promise<PaginatedJobs> {
+    const { ids, total } = await this.search.search(filters);
+    if (ids.length === 0) {
+      return { items: [], total, page: filters.page, pageSize: filters.pageSize };
+    }
+    const jobs = await this.prisma.job.findMany({
+      where: { id: { in: ids }, status: JobStatus.ACTIVE },
+    });
+    // Preserve Elasticsearch relevance order.
+    const byId = new Map(jobs.map((job) => [job.id, job]));
+    const items = ids.map((id) => byId.get(id)).filter((job): job is Job => job !== undefined);
+    return { items, total, page: filters.page, pageSize: filters.pageSize };
+  }
+
+  private async listViaSql(filters: JobFiltersDto): Promise<PaginatedJobs> {
     const where = this.buildWhere(filters);
     const [items, total] = await this.prisma.$transaction([
       this.prisma.job.findMany({

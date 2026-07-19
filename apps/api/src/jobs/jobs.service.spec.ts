@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { JobStatus, SeniorityLevel } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { JobSearchService } from '../search/job-search.service';
 import { JobFiltersDto } from './dto/job-filters.dto';
 import { JobsService } from './jobs.service';
 
@@ -9,6 +10,7 @@ describe('JobsService', () => {
     job: { findMany: jest.Mock; count: jest.Mock; findUnique: jest.Mock };
     $transaction: jest.Mock;
   };
+  let search: { enabled: boolean; search: jest.Mock; bulkIndex: jest.Mock };
   let service: JobsService;
 
   const filters = (overrides: Partial<JobFiltersDto> = {}): JobFiltersDto =>
@@ -23,7 +25,11 @@ describe('JobsService', () => {
       },
       $transaction: jest.fn().mockImplementation((ops: unknown[]) => Promise.all(ops)),
     };
-    service = new JobsService(prisma as unknown as PrismaService);
+    search = { enabled: false, search: jest.fn(), bulkIndex: jest.fn() };
+    service = new JobsService(
+      prisma as unknown as PrismaService,
+      search as unknown as JobSearchService,
+    );
   });
 
   it('returns a paginated result scoped to active jobs', async () => {
@@ -68,5 +74,27 @@ describe('JobsService', () => {
   it('throws when a job is not found', async () => {
     prisma.job.findUnique.mockResolvedValue(null);
     await expect(service.getById('missing')).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('uses Elasticsearch for text search and preserves relevance order', async () => {
+    search.enabled = true;
+    search.search.mockResolvedValue({ ids: ['j2', 'j1'], total: 2 });
+    prisma.job.findMany.mockResolvedValue([{ id: 'j1' }, { id: 'j2' }]);
+
+    const result = await service.list(filters({ search: 'engineer' }));
+
+    expect(search.search).toHaveBeenCalled();
+    // Order follows Elasticsearch relevance (j2 before j1), not DB order.
+    expect(result.items).toEqual([{ id: 'j2' }, { id: 'j1' }]);
+    expect(result.total).toBe(2);
+  });
+
+  it('falls back to SQL when Elasticsearch search throws', async () => {
+    search.enabled = true;
+    search.search.mockRejectedValue(new Error('es down'));
+
+    const result = await service.list(filters({ search: 'engineer' }));
+
+    expect(result.items).toEqual([{ id: 'j1' }]);
   });
 });

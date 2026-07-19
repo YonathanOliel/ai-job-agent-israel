@@ -73,6 +73,11 @@ export const envSchema = z.object({
   // Findwork.dev API. Enabled when FINDWORK_API_KEY is set.
   FINDWORK_API_KEY: z.string().optional(),
   FINDWORK_SEARCH: z.string().default('developer'),
+  // Elasticsearch — full-text job search. When ELASTICSEARCH_NODE is set the
+  // search endpoint is served by Elasticsearch (relevance + fuzzy); otherwise
+  // it falls back to PostgreSQL. No regression when unset.
+  ELASTICSEARCH_NODE: z.string().optional(),
+  ELASTICSEARCH_INDEX: z.string().default('jobs'),
   // Max jobs to ingest per source per run.
   JOB_INGEST_LIMIT: z.coerce.number().int().positive().max(200).default(50),
   // Include the built-in sample jobs alongside real sources (dev/testing).

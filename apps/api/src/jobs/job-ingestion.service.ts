@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { JobStatus, Prisma } from '@prisma/client';
+import { Job, JobStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { JobSearchService } from '../search/job-search.service';
 import { buildContentHash, buildDedupeKey } from './job-dedup.util';
 import { JOB_SOURCES, type JobSource, type RawJob } from './job-source.types';
 
@@ -11,7 +12,8 @@ export interface IngestionResult {
 
 /**
  * Pulls postings from all enabled {@link JobSource}s and upserts them, keyed by
- * (source, externalId) so re-ingestion is idempotent.
+ * (source, externalId) so re-ingestion is idempotent. Each upserted posting is
+ * also indexed into the search backend (best-effort).
  */
 @Injectable()
 export class JobIngestionService {
@@ -19,6 +21,7 @@ export class JobIngestionService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly search: JobSearchService,
     @Inject(JOB_SOURCES) private readonly sources: JobSource[],
   ) {}
 
@@ -29,7 +32,8 @@ export class JobIngestionService {
       try {
         const jobs = await source.fetchJobs();
         for (const job of jobs) {
-          await this.upsert(source.name, job);
+          const persisted = await this.upsert(source.name, job);
+          await this.search.index(persisted);
           ingested += 1;
         }
         succeeded.push(source.name);
@@ -42,10 +46,10 @@ export class JobIngestionService {
     return { ingested, sources: succeeded };
   }
 
-  private async upsert(source: string, job: RawJob): Promise<void> {
+  private async upsert(source: string, job: RawJob): Promise<Job> {
     const data = this.toData(source, job);
     const now = new Date();
-    await this.prisma.job.upsert({
+    return this.prisma.job.upsert({
       where: { source_externalId: { source, externalId: job.externalId } },
       // Track when we first and last observed the posting; only lastSeenAt moves
       // on re-ingestion so freshness/staleness can be derived later.
