@@ -18,6 +18,7 @@ import { JobFiltersDto } from './dto/job-filters.dto';
 import { IngestionQueueService } from './ingestion-queue.service';
 import { JobDedupService, type DedupResult } from './job-dedup.service';
 import { JobIngestionService, type IngestionResult } from './job-ingestion.service';
+import { JobSemanticDedupService, type SemanticDedupResult } from './job-semantic-dedup.service';
 import { JobStatsService, type JobStats } from './job-stats.service';
 import { JobsService, type PaginatedJobs } from './jobs.service';
 import { SourceRegistryService } from './source-registry.service';
@@ -29,6 +30,7 @@ export class JobsController {
     private readonly ingestion: JobIngestionService,
     private readonly queue: IngestionQueueService,
     private readonly dedup: JobDedupService,
+    private readonly semanticDedup: JobSemanticDedupService,
     private readonly stats: JobStatsService,
     private readonly registry: SourceRegistryService,
     private readonly discovery: AtsDetectionService,
@@ -90,6 +92,13 @@ export class JobsController {
   @HttpCode(HttpStatus.OK)
   runDedup(): Promise<DedupResult> {
     return this.dedup.reconcile();
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Post('dedup-semantic')
+  @HttpCode(HttpStatus.OK)
+  runSemanticDedup(): Promise<SemanticDedupResult> {
+    return this.semanticDedup.reconcile();
   }
 
   @Roles(UserRole.ADMIN)

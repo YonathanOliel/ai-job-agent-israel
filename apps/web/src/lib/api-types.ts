@@ -213,3 +213,11 @@ export interface EmbeddingBackfillResult {
   jobs: { total: number; embedded: number };
   profiles: { total: number; embedded: number };
 }
+
+export interface SemanticDedupResult {
+  enabled: boolean;
+  scanned: number;
+  groups: number;
+  duplicates: number;
+  updated: number;
+}

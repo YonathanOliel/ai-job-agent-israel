@@ -17,6 +17,7 @@ import type {
   ResumeParseResult,
   SavedSearch,
   SavedSearchFilters,
+  SemanticDedupResult,
 } from './api-types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
@@ -191,4 +192,7 @@ export const api = {
 
   embedAllJobs: (token: string) =>
     request<EmbeddingBackfillResult>('/jobs/embed-all', { method: 'POST', token }),
+
+  dedupSemanticJobs: (token: string) =>
+    request<SemanticDedupResult>('/jobs/dedup-semantic', { method: 'POST', token }),
 };

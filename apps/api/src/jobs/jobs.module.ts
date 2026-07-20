@@ -12,6 +12,7 @@ import { GreenhouseJobSource } from './greenhouse-job.source';
 import { IngestionQueueService } from './ingestion-queue.service';
 import { JobDedupService } from './job-dedup.service';
 import { JobIngestionService } from './job-ingestion.service';
+import { JobSemanticDedupService } from './job-semantic-dedup.service';
 import { JobStatsService } from './job-stats.service';
 import { SourceRegistryService } from './source-registry.service';
 import { JobsController } from './jobs.controller';
@@ -30,6 +31,7 @@ import { TelegramJobSource } from './telegram-job.source';
     JobsService,
     JobIngestionService,
     JobDedupService,
+    JobSemanticDedupService,
     JobStatsService,
     SourceRegistryService,
     CompanyRegistryService,

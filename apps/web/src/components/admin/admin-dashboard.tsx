@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Database,
   Gauge,
+  Layers,
   LogOut,
   MapPin,
   Monitor,
@@ -29,6 +30,7 @@ import type {
   AdminUser,
   AuditAction,
   EmbeddingBackfillResult,
+  SemanticDedupResult,
 } from '@/lib/api-types';
 import { formatDate } from '@/lib/utils';
 
@@ -55,6 +57,8 @@ export function AdminDashboard({ token }: { token: string }) {
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [embedding, setEmbedding] = useState(false);
   const [embedResult, setEmbedResult] = useState<EmbeddingBackfillResult | null>(null);
+  const [deduping, setDeduping] = useState(false);
+  const [dedupResult, setDedupResult] = useState<SemanticDedupResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -108,6 +112,19 @@ export function AdminDashboard({ token }: { token: string }) {
       setEmbedResult(result);
     } finally {
       setEmbedding(false);
+    }
+  };
+
+  const runDedup = async () => {
+    setDeduping(true);
+    try {
+      const result = await api.dedupSemanticJobs(token);
+      setDedupResult(result);
+      if (result.updated > 0) {
+        await load();
+      }
+    } finally {
+      setDeduping(false);
     }
   };
 
@@ -251,6 +268,9 @@ export function AdminDashboard({ token }: { token: string }) {
         result={embedResult}
         activeJobs={activeJobs}
         onRun={runEmbedding}
+        deduping={deduping}
+        dedupResult={dedupResult}
+        onDedup={runDedup}
       />
 
       {/* Active sessions */}
@@ -309,11 +329,17 @@ function EmbeddingCard({
   result,
   activeJobs,
   onRun,
+  deduping,
+  dedupResult,
+  onDedup,
 }: {
   embedding: boolean;
   result: EmbeddingBackfillResult | null;
   activeJobs: number;
   onRun: () => void;
+  deduping: boolean;
+  dedupResult: SemanticDedupResult | null;
+  onDedup: () => void;
 }) {
   return (
     <Card>
@@ -342,6 +368,30 @@ function EmbeddingCard({
                 מנוע ה-AI כבוי — הגדר את המפתח (OPENAI_API_KEY) כדי להפעיל.
               </span>
             ))}
+        </div>
+        <div className="mt-1 flex flex-col gap-3 border-t pt-3">
+          <p className="text-sm text-muted-foreground">
+            איחוד כפילויות סמנטי: זיהוי אותה משרה שפורסמה במספר מקורות בניסוח שונה (לפי דמיון וקטורי
+            + התאמת חברה) ואיחודה לישות קנונית אחת.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button onClick={onDedup} disabled={deduping} variant="outline" className="gap-2">
+              <Layers className="size-4" aria-hidden />
+              {deduping ? 'מאחד כפילויות…' : 'אחד כפילויות סמנטית'}
+            </Button>
+            {dedupResult &&
+              (dedupResult.enabled ? (
+                <span className="text-sm text-success">
+                  אוחדו {dedupResult.duplicates} כפילויות ב-{dedupResult.groups} קבוצות (מתוך{' '}
+                  {dedupResult.scanned} נסרקו).
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <AlertCircle className="size-4 shrink-0" aria-hidden />
+                  דורש הטמעות — הפעל תחילה את מנוע ה-AI.
+                </span>
+              ))}
+          </div>
         </div>
       </CardContent>
     </Card>
