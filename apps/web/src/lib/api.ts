@@ -11,6 +11,8 @@ import type {
   PublicUser,
   Resume,
   ResumeParseResult,
+  SavedSearch,
+  SavedSearchFilters,
 } from './api-types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
@@ -155,4 +157,12 @@ export const api = {
     request<JobReferral>('/referrals', { method: 'POST', body, token }),
 
   listReferrals: (token: string) => request<JobReferral[]>('/referrals', { token }),
+
+  createSavedSearch: (token: string, body: { name: string; filters: SavedSearchFilters }) =>
+    request<SavedSearch>('/saved-searches', { method: 'POST', body, token }),
+
+  listSavedSearches: (token: string) => request<SavedSearch[]>('/saved-searches', { token }),
+
+  deleteSavedSearch: (token: string, id: string) =>
+    request<void>(`/saved-searches/${id}`, { method: 'DELETE', token }),
 };

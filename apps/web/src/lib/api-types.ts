@@ -94,6 +94,22 @@ export interface JobReferral {
   updatedAt: string;
 }
 
+export interface SavedSearchFilters {
+  search?: string;
+  city?: string;
+  technology?: string;
+  seniority?: string;
+  isRemote?: boolean;
+}
+
+export interface SavedSearch {
+  id: string;
+  name: string;
+  filters: SavedSearchFilters;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type ResumeStatus = 'UPLOADED' | 'PARSING' | 'PARSED' | 'FAILED';
 
 export interface Resume {

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   AlertCircle,
+  Bookmark,
+  BookmarkPlus,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
@@ -19,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api, type JobFilters } from '@/lib/api';
-import type { Job, Paginated } from '@/lib/api-types';
+import type { Job, Paginated, SavedSearch, SavedSearchFilters } from '@/lib/api-types';
 import { formatDate, formatShekels } from '@/lib/utils';
 
 const PAGE_SIZE = 10;
@@ -49,6 +51,23 @@ export function JobSearch({ token }: { token: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
+  const [showSave, setShowSave] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const loadSaved = useCallback(async () => {
+    try {
+      setSavedSearches(await api.listSavedSearches(token));
+    } catch {
+      setSavedSearches([]);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    void loadSaved();
+  }, [loadSaved]);
+
   const fetchJobs = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -65,16 +84,57 @@ export function JobSearch({ token }: { token: string }) {
     void fetchJobs();
   }, [fetchJobs]);
 
+  const currentFilters = (): SavedSearchFilters => ({
+    search: search || undefined,
+    city: city || undefined,
+    technology: technology || undefined,
+    seniority: seniority || undefined,
+    isRemote: isRemote || undefined,
+  });
+
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     setPage(1);
+    setApplied(currentFilters());
+  };
+
+  const applySaved = (saved: SavedSearch) => {
+    const f = saved.filters ?? {};
+    setSearch(f.search ?? '');
+    setCity(f.city ?? '');
+    setTechnology(f.technology ?? '');
+    setSeniority(f.seniority ?? '');
+    setIsRemote(Boolean(f.isRemote));
+    setPage(1);
     setApplied({
-      search: search || undefined,
-      city: city || undefined,
-      technology: technology || undefined,
-      seniority: seniority || undefined,
-      isRemote: isRemote || undefined,
+      search: f.search || undefined,
+      city: f.city || undefined,
+      technology: f.technology || undefined,
+      seniority: f.seniority || undefined,
+      isRemote: f.isRemote || undefined,
     });
+  };
+
+  const saveCurrent = async () => {
+    if (saveName.trim().length < 2) return;
+    setSaving(true);
+    try {
+      await api.createSavedSearch(token, { name: saveName.trim(), filters: currentFilters() });
+      setSaveName('');
+      setShowSave(false);
+      await loadSaved();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteSaved = async (id: string) => {
+    setSavedSearches((prev) => prev.filter((s) => s.id !== id));
+    try {
+      await api.deleteSavedSearch(token, id);
+    } catch {
+      await loadSaved();
+    }
   };
 
   const reset = () => {
@@ -160,7 +220,7 @@ export function JobSearch({ token }: { token: string }) {
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button type="submit" className="px-6">
                 חיפוש
               </Button>
@@ -170,10 +230,92 @@ export function JobSearch({ token }: { token: string }) {
                   ניקוי מסננים
                 </Button>
               )}
+              {hasFilters && !showSave && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="ms-auto"
+                  onClick={() => setShowSave(true)}
+                >
+                  <BookmarkPlus className="size-4" aria-hidden />
+                  שמירת חיפוש
+                </Button>
+              )}
             </div>
+
+            {showSave && (
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-brand-soft p-2.5">
+                <Input
+                  autoFocus
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      void saveCurrent();
+                    }
+                  }}
+                  placeholder="שם לחיפוש (למשל: Senior React ת״א)"
+                  className="h-10 flex-1 bg-card"
+                  maxLength={80}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  loading={saving}
+                  disabled={saveName.trim().length < 2}
+                  onClick={saveCurrent}
+                >
+                  שמירה
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setShowSave(false);
+                    setSaveName('');
+                  }}
+                >
+                  ביטול
+                </Button>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>
+
+      {/* Saved searches */}
+      {savedSearches.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
+            <Bookmark className="size-4" aria-hidden />
+            חיפושים שמורים:
+          </span>
+          {savedSearches.map((s) => (
+            <span
+              key={s.id}
+              className="group inline-flex items-center gap-1 rounded-full border border-border bg-card py-1 pe-1 ps-3 text-sm transition-colors hover:border-primary/40"
+            >
+              <button
+                type="button"
+                onClick={() => applySaved(s)}
+                className="font-medium text-foreground transition-colors hover:text-primary"
+              >
+                {s.name}
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteSaved(s.id)}
+                aria-label={`מחיקת החיפוש ${s.name}`}
+                className="grid size-5 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+              >
+                <X className="size-3.5" aria-hidden />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Results */}
       {error ? (
