@@ -1,4 +1,4 @@
-export type UserRole = 'CANDIDATE' | 'ADMIN';
+export type UserRole = 'CANDIDATE' | 'SUPPORT' | 'ADMIN' | 'SUPER_ADMIN';
 export type LanguageCode = 'HE' | 'EN';
 export type MatchStatus = 'NEW' | 'VIEWED' | 'SAVED' | 'APPLIED' | 'DISMISSED';
 
@@ -149,4 +149,43 @@ export interface CareerProfile {
   languages: ProfileLanguage[] | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export type AuditAction =
+  | 'USER_REGISTERED'
+  | 'LOGIN_SUCCEEDED'
+  | 'LOGIN_FAILED'
+  | 'TOKEN_REFRESHED'
+  | 'LOGOUT';
+
+export interface AdminSourceRow {
+  key: string;
+  type: string;
+  enabled: boolean;
+  lastStatus: 'PENDING' | 'SUCCESS' | 'FAILED' | null;
+  lastJobCount: number | null;
+  lastRunAt: string | null;
+  totalRuns: number;
+}
+
+export interface AdminOverview {
+  users: { total: number; byRole: Record<string, number>; newLast24h: number };
+  auth: { registrations24h: number; loginSucceeded24h: number; loginFailed24h: number };
+  sessions: { active: number };
+  recentActivity: Array<{
+    action: AuditAction;
+    userEmail: string | null;
+    ipAddress: string | null;
+    createdAt: string;
+  }>;
+  sources: AdminSourceRow[];
+  jobs: {
+    totals: { active: number; duplicate: number; closed: number; archived: number; all: number };
+    companies: number;
+    bySource: Array<{ source: string; count: number }>;
+    avgQualityScore: number;
+    israel: { located: number; remote: number };
+    freshness: { newInLast24h: number; seenInLast7d: number; newestPostedAt: string | null };
+  };
+  system: { database: 'up' | 'down'; search: 'up' | 'down' | 'disabled' };
 }

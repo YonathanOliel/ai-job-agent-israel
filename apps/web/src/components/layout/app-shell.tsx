@@ -3,7 +3,15 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { LayoutGrid, LogOut, Search, FileText, Share2, type LucideIcon } from 'lucide-react';
+import {
+  LayoutGrid,
+  LogOut,
+  Search,
+  FileText,
+  Share2,
+  ShieldCheck,
+  type LucideIcon,
+} from 'lucide-react';
 import { Logo } from '@/components/brand/logo';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuth } from '@/lib/auth-context';
@@ -21,6 +29,9 @@ const NAV: NavItem[] = [
   { href: '/resume', label: 'קורות חיים', icon: FileText },
   { href: '/share', label: 'שיתוף משרה', icon: Share2 },
 ];
+
+const ADMIN_NAV: NavItem = { href: '/admin', label: 'ניהול', icon: ShieldCheck };
+const ADMIN_ROLES = new Set(['ADMIN', 'SUPER_ADMIN']);
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).slice(0, 2);
@@ -46,6 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const label = user.displayName ?? user.email;
+  const nav = ADMIN_ROLES.has(user.role) ? [...NAV, ADMIN_NAV] : NAV;
 
   return (
     <div className="min-h-screen">
@@ -59,7 +71,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex">
-            {NAV.map((item) => {
+            {nav.map((item) => {
               const active = pathname === item.href;
               return (
                 <Link
@@ -107,7 +119,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile bottom navigation — thumb-zone friendly */}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/70 glass md:hidden">
         <div className="mx-auto flex max-w-md items-stretch justify-around px-2 py-1.5">
-          {NAV.map((item) => {
+          {nav.map((item) => {
             const active = pathname === item.href;
             return (
               <Link

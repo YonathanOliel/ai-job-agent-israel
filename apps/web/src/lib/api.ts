@@ -1,4 +1,5 @@
 import type {
+  AdminOverview,
   AuthResult,
   CareerProfile,
   GenerateMatchesResult,
@@ -165,4 +166,6 @@ export const api = {
 
   deleteSavedSearch: (token: string, id: string) =>
     request<void>(`/saved-searches/${id}`, { method: 'DELETE', token }),
+
+  getAdminOverview: (token: string) => request<AdminOverview>('/admin/overview', { token }),
 };
