@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Job, JobMatch, JobStatus, MatchStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { israelJobWhere } from '../jobs/israel-filter';
 import { MatchFiltersDto } from './dto/match-filters.dto';
 import { MATCH_SCORER, type MatchScorer } from './match-score.types';
 
@@ -35,7 +36,10 @@ export class MatchingService {
       throw new UnprocessableEntityException('Generate your career profile before matching jobs');
     }
 
-    const jobs = await this.prisma.job.findMany({ where: { status: JobStatus.ACTIVE } });
+    const jobs = await this.prisma.job.findMany({
+      // Israel-only mandate: never match a candidate against a non-Israeli job.
+      where: { status: JobStatus.ACTIVE, ...israelJobWhere() },
+    });
     for (const job of jobs) {
       const result = await this.scorer.score(profile, job);
       await this.prisma.jobMatch.upsert({
@@ -53,6 +57,12 @@ export class MatchingService {
         },
       });
     }
+
+    // Drop stale matches for jobs no longer in scope (e.g. now-archived or
+    // non-Israeli postings from a previous run), keeping the list Israel-only.
+    await this.prisma.jobMatch.deleteMany({
+      where: { userId, jobId: { notIn: jobs.map((job) => job.id) } },
+    });
 
     const list = await this.list(userId, Object.assign(new MatchFiltersDto(), {}));
     return { generated: jobs.length, ...list };

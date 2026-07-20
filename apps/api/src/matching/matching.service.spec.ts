@@ -20,6 +20,7 @@ describe('MatchingService', () => {
       count: jest.Mock;
       findUnique: jest.Mock;
       update: jest.Mock;
+      deleteMany: jest.Mock;
     };
     $transaction: jest.Mock;
   };
@@ -39,6 +40,7 @@ describe('MatchingService', () => {
         count: jest.fn().mockResolvedValue(2),
         findUnique: jest.fn().mockResolvedValue({ id: 'm1', job: { id: 'j1' } }),
         update: jest.fn().mockResolvedValue({ id: 'm1', status: 'SAVED', job: { id: 'j1' } }),
+        deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
       },
       $transaction: jest.fn().mockImplementation((ops: unknown[]) => Promise.all(ops)),
     };
@@ -64,6 +66,14 @@ describe('MatchingService', () => {
     );
     expect(result.generated).toBe(2);
     expect(result.total).toBe(2);
+  });
+
+  it('removes stale matches for jobs no longer in scope', async () => {
+    await service.generate('u1');
+
+    expect(prisma.jobMatch.deleteMany).toHaveBeenCalledWith({
+      where: { userId: 'u1', jobId: { notIn: ['j1', 'j2'] } },
+    });
   });
 
   it('lists matches ranked by score', async () => {
