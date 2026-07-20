@@ -8,11 +8,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md',
-        gradient: 'bg-brand-gradient text-white shadow-sm hover:shadow-glow',
+        // Ink primary: near-black in light, warm-white in dark — auto-inverting,
+        // always high-contrast, elegant. Gold is reserved as an accent.
+        primary: 'bg-foreground text-background shadow-sm hover:bg-foreground/90 hover:shadow-md',
+        // Brushed-brass gradient with ink text for AA contrast on the gold.
+        gradient: 'bg-brand-gradient text-[hsl(30_28%_10%)] shadow-sm hover:shadow-glow',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/70',
         outline:
-          'border border-input bg-card text-foreground hover:border-primary/40 hover:bg-secondary/60',
+          'border border-input bg-card text-foreground hover:border-primary/50 hover:bg-secondary/60',
         ghost: 'text-foreground hover:bg-secondary',
         destructive: 'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90',
       },

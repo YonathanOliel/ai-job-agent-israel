@@ -4,52 +4,54 @@
 
 @layer base {
   :root {
-    --background: 220 33% 98%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 42%;
-    --primary: 243 75% 59%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222 33% 18%;
-    --accent: 262 83% 58%;
-    --accent-foreground: 0 0% 100%;
-    --success: 152 58% 38%;
-    --success-foreground: 0 0% 100%;
-    --warning: 30 92% 42%;
-    --warning-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 16% 90%;
-    --input: 220 16% 88%;
-    --ring: 243 75% 59%;
+    /* Luxury "alabaster" light theme: warm off-whites, brushed-brass accent. */
+    --background: 40 33% 97%;
+    --foreground: 30 8% 11%;
+    --card: 40 40% 99%;
+    --card-foreground: 30 8% 11%;
+    --muted: 40 22% 93%;
+    --muted-foreground: 34 6% 40%;
+    --primary: 34 38% 50%;
+    --primary-foreground: 30 12% 12%;
+    --secondary: 40 22% 93%;
+    --secondary-foreground: 30 10% 20%;
+    --accent: 28 40% 46%;
+    --accent-foreground: 40 33% 97%;
+    --success: 152 24% 36%;
+    --success-foreground: 40 33% 97%;
+    --warning: 34 55% 42%;
+    --warning-foreground: 40 33% 97%;
+    --destructive: 8 44% 45%;
+    --destructive-foreground: 40 33% 97%;
+    --border: 38 22% 86%;
+    --input: 38 20% 84%;
+    --ring: 34 38% 50%;
     --radius: 0.75rem;
   }
 
   .dark {
-    --background: 224 32% 6%;
-    --foreground: 210 40% 98%;
-    --card: 224 27% 9%;
-    --card-foreground: 210 40% 98%;
-    --muted: 223 19% 15%;
-    --muted-foreground: 218 14% 64%;
-    --primary: 243 79% 68%;
-    --primary-foreground: 224 40% 8%;
-    --secondary: 223 19% 15%;
-    --secondary-foreground: 210 40% 96%;
-    --accent: 262 83% 70%;
-    --accent-foreground: 224 40% 8%;
-    --success: 152 55% 46%;
-    --success-foreground: 224 40% 8%;
-    --warning: 34 92% 55%;
-    --warning-foreground: 224 40% 8%;
-    --destructive: 0 72% 58%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 220 16% 18%;
-    --input: 220 14% 22%;
-    --ring: 243 79% 68%;
+    /* Luxury "obsidian" dark theme: deep warm blacks, zinc borders, soft gold. */
+    --background: 225 14% 7%;
+    --foreground: 40 20% 92%;
+    --card: 228 12% 11%;
+    --card-foreground: 40 20% 92%;
+    --muted: 228 11% 15%;
+    --muted-foreground: 40 5% 64%;
+    --primary: 36 45% 62%;
+    --primary-foreground: 225 16% 8%;
+    --secondary: 228 11% 15%;
+    --secondary-foreground: 40 20% 90%;
+    --accent: 34 42% 58%;
+    --accent-foreground: 225 16% 8%;
+    --success: 148 24% 54%;
+    --success-foreground: 225 16% 8%;
+    --warning: 36 58% 60%;
+    --warning-foreground: 225 16% 8%;
+    --destructive: 8 46% 60%;
+    --destructive-foreground: 40 20% 92%;
+    --border: 228 10% 20%;
+    --input: 228 10% 24%;
+    --ring: 36 45% 62%;
   }
 
   * {
@@ -69,7 +71,7 @@
   }
 
   ::selection {
-    background-color: hsl(var(--primary) / 0.18);
+    background-color: hsl(var(--primary) / 0.22);
   }
 
   :focus-visible {

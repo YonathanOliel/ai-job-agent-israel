@@ -24,11 +24,11 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="grid min-h-screen lg:grid-cols-2">
       {/* Brand panel */}
-      <aside className="relative hidden overflow-hidden bg-brand-gradient p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_100%_0%,rgba(255,255,255,0.22),transparent)]" />
+      <aside className="relative hidden overflow-hidden bg-brand-deep p-12 text-[hsl(40_20%_92%)] lg:flex lg:flex-col lg:justify-between">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(65%_65%_at_100%_0%,hsl(36_44%_58%/0.16),transparent)]" />
         <div className="relative">
           <span className="inline-flex items-center gap-2.5">
-            <span className="grid size-9 place-items-center rounded-xl bg-white/15 backdrop-blur">
+            <span className="grid size-9 place-items-center rounded-xl bg-brand-gradient text-[hsl(30_28%_10%)]">
               <Sparkles className="size-5" aria-hidden />
             </span>
             <span className="text-[15px] font-extrabold tracking-tight">סוכן העבודה החכם</span>
@@ -41,25 +41,25 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
             <br />
             מותאמת אליך אישית.
           </h2>
-          <p className="mt-3 text-white/80">
+          <p className="mt-3 text-[hsl(40_12%_72%)]">
             מעלים קורות חיים פעם אחת, והסוכן מוצא, מדרג ומסביר את המשרות שהכי שווה לך להגיש להן.
           </p>
           <ul className="mt-8 flex flex-col gap-5">
             {POINTS.map((p) => (
               <li key={p.title} className="flex items-start gap-3.5">
-                <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg bg-white/15">
+                <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary">
                   <p.icon className="size-[18px]" aria-hidden />
                 </span>
                 <span>
                   <span className="block font-semibold">{p.title}</span>
-                  <span className="block text-sm text-white/75">{p.text}</span>
+                  <span className="block text-sm text-[hsl(40_10%_66%)]">{p.text}</span>
                 </span>
               </li>
             ))}
           </ul>
         </div>
 
-        <p className="relative text-sm text-white/70">חינם לגמרי · ללא כרטיס אשראי</p>
+        <p className="relative text-sm text-[hsl(40_10%_62%)]">חינם לגמרי · ללא כרטיס אשראי</p>
       </aside>
 
       {/* Form panel */}

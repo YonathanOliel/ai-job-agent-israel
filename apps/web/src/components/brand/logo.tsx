@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 export function Logo({ compact, className }: { compact?: boolean; className?: string }) {
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
-      <span className="grid size-9 place-items-center rounded-xl bg-brand-gradient text-white shadow-sm">
+      <span className="grid size-9 place-items-center rounded-xl bg-brand-gradient text-[hsl(30_28%_10%)] shadow-sm">
         <Sparkles className="size-5" aria-hidden />
       </span>
       {!compact && (

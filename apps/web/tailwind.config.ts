@@ -60,16 +60,17 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       boxShadow: {
-        xs: '0 1px 2px 0 hsl(222 47% 11% / 0.05)',
-        sm: '0 1px 3px 0 hsl(222 47% 11% / 0.08), 0 1px 2px -1px hsl(222 47% 11% / 0.06)',
-        md: '0 4px 12px -2px hsl(222 47% 11% / 0.10), 0 2px 6px -2px hsl(222 47% 11% / 0.06)',
-        lg: '0 12px 32px -8px hsl(222 47% 11% / 0.16), 0 6px 12px -6px hsl(222 47% 11% / 0.08)',
-        glow: '0 0 0 1px hsl(var(--primary) / 0.12), 0 8px 30px -8px hsl(var(--primary) / 0.35)',
+        xs: '0 1px 2px 0 hsl(30 20% 10% / 0.05)',
+        sm: '0 1px 3px 0 hsl(30 20% 10% / 0.08), 0 1px 2px -1px hsl(30 20% 10% / 0.06)',
+        md: '0 4px 14px -2px hsl(30 20% 10% / 0.10), 0 2px 6px -2px hsl(30 20% 10% / 0.06)',
+        lg: '0 16px 40px -12px hsl(30 24% 10% / 0.18), 0 6px 14px -6px hsl(30 20% 10% / 0.09)',
+        glow: '0 0 0 1px hsl(var(--primary) / 0.16), 0 10px 34px -10px hsl(var(--primary) / 0.4)',
       },
       backgroundImage: {
-        'brand-gradient': 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))',
+        'brand-gradient': 'linear-gradient(135deg, hsl(38 44% 58%), hsl(28 42% 46%))',
         'brand-soft':
-          'radial-gradient(120% 120% at 100% 0%, hsl(var(--primary) / 0.14) 0%, transparent 55%), radial-gradient(120% 120% at 0% 100%, hsl(var(--accent) / 0.12) 0%, transparent 55%)',
+          'radial-gradient(120% 120% at 100% 0%, hsl(var(--primary) / 0.14) 0%, transparent 55%), radial-gradient(120% 120% at 0% 100%, hsl(var(--accent) / 0.10) 0%, transparent 55%)',
+        'brand-deep': 'linear-gradient(150deg, hsl(228 14% 12%), hsl(225 16% 6%))',
       },
       keyframes: {
         'fade-in': {

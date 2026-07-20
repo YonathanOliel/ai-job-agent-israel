@@ -84,7 +84,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <ThemeToggle />
             <div className="mx-1 hidden h-6 w-px bg-border sm:block" />
             <div
-              className="hidden size-9 place-items-center rounded-full bg-brand-gradient text-xs font-bold text-white sm:grid"
+              className="hidden size-9 place-items-center rounded-full bg-brand-gradient text-xs font-bold text-[hsl(30_28%_10%)] sm:grid"
               title={label}
               aria-hidden
             >
