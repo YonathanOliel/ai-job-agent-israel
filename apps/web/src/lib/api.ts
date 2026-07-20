@@ -4,6 +4,8 @@ import type {
   GenerateMatchesResult,
   Job,
   JobMatch,
+  JobReferral,
+  MatchInsight,
   MatchStatus,
   Paginated,
   PublicUser,
@@ -145,4 +147,12 @@ export const api = {
 
   updateMatchStatus: (token: string, jobId: string, status: MatchStatus) =>
     request<JobMatch>(`/matches/${jobId}/status`, { method: 'PATCH', body: { status }, token }),
+
+  explainMatch: (token: string, jobId: string) =>
+    request<MatchInsight>(`/matches/${jobId}/explain`, { method: 'POST', token }),
+
+  submitReferral: (token: string, body: { text: string; url?: string }) =>
+    request<JobReferral>('/referrals', { method: 'POST', body, token }),
+
+  listReferrals: (token: string) => request<JobReferral[]>('/referrals', { token }),
 };

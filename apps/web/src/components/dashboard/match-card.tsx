@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Bookmark, CheckCircle2, ExternalLink, MapPin, X } from 'lucide-react';
+import { Bookmark, CheckCircle2, ExternalLink, MapPin, Sparkles, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ScoreRing } from '@/components/ui/score-ring';
-import { api } from '@/lib/api';
-import type { JobMatch, MatchStatus } from '@/lib/api-types';
+import { ApiError, api } from '@/lib/api';
+import type { JobMatch, MatchInsight, MatchStatus } from '@/lib/api-types';
 import { cn, formatShekels } from '@/lib/utils';
 
 const DIMENSION_LABELS: Record<string, string> = {
@@ -38,6 +38,9 @@ function barTone(score: number): string {
 export function MatchCard({ match, token }: { match: JobMatch; token: string }) {
   const [status, setStatus] = useState<MatchStatus>(match.status);
   const [busy, setBusy] = useState<MatchStatus | null>(null);
+  const [insight, setInsight] = useState<MatchInsight | null>(null);
+  const [insightError, setInsightError] = useState<string | null>(null);
+  const [explaining, setExplaining] = useState(false);
   const { job, scores } = match;
 
   const changeStatus = async (next: MatchStatus) => {
@@ -47,6 +50,26 @@ export function MatchCard({ match, token }: { match: JobMatch; token: string }) 
       setStatus(updated.status);
     } finally {
       setBusy(null);
+    }
+  };
+
+  const explain = async () => {
+    if (insight) {
+      setInsight(null);
+      return;
+    }
+    setExplaining(true);
+    setInsightError(null);
+    try {
+      setInsight(await api.explainMatch(token, match.jobId));
+    } catch (err) {
+      setInsightError(
+        err instanceof ApiError && err.status === 503
+          ? 'הסברי ה-AI אינם זמינים כרגע.'
+          : 'לא הצלחנו להפיק הסבר. נסו שוב.',
+      );
+    } finally {
+      setExplaining(false);
     }
   };
 
@@ -119,7 +142,34 @@ export function MatchCard({ match, token }: { match: JobMatch; token: string }) 
           </div>
         )}
 
+        {(insight || insightError) && (
+          <div className="animate-fade-in rounded-lg border border-primary/20 bg-brand-soft p-3.5">
+            {insight ? (
+              <div className="flex flex-col gap-2 text-sm">
+                <p className="flex items-start gap-2 leading-relaxed">
+                  <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                  <span>{insight.whyYouFit}</span>
+                </p>
+                <p className="ps-6 text-[13px] leading-relaxed text-muted-foreground">
+                  {insight.whatYouMiss}
+                </p>
+              </div>
+            ) : (
+              <p className="text-[13px] text-muted-foreground">{insightError}</p>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-wrap items-center gap-2 border-t pt-4">
+          <Button
+            size="sm"
+            variant={insight ? 'secondary' : 'gradient'}
+            loading={explaining}
+            onClick={explain}
+          >
+            <Sparkles className="size-4" aria-hidden />
+            {insight ? 'הסתרת הסבר' : 'למה אני מתאים?'}
+          </Button>
           <Button
             size="sm"
             variant={status === 'SAVED' ? 'primary' : 'outline'}

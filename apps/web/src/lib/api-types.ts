@@ -75,6 +75,25 @@ export interface GenerateMatchesResult extends Paginated<JobMatch> {
   generated: number;
 }
 
+export interface MatchInsight {
+  whyYouFit: string;
+  whatYouMiss: string;
+  provider: string;
+}
+
+export type ReferralStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
+
+export interface JobReferral {
+  id: string;
+  rawUrl: string | null;
+  rawText: string;
+  status: ReferralStatus;
+  rejectionReason: string | null;
+  resultingJobId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type ResumeStatus = 'UPLOADED' | 'PARSING' | 'PARSED' | 'FAILED';
 
 export interface Resume {

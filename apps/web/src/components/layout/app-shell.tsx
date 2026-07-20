@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { LayoutGrid, LogOut, Search, FileText, type LucideIcon } from 'lucide-react';
+import { LayoutGrid, LogOut, Search, FileText, Share2, type LucideIcon } from 'lucide-react';
 import { Logo } from '@/components/brand/logo';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuth } from '@/lib/auth-context';
@@ -19,6 +19,7 @@ const NAV: NavItem[] = [
   { href: '/dashboard', label: 'התאמות', icon: LayoutGrid },
   { href: '/jobs', label: 'חיפוש משרות', icon: Search },
   { href: '/resume', label: 'קורות חיים', icon: FileText },
+  { href: '/share', label: 'שיתוף משרה', icon: Share2 },
 ];
 
 function initials(name: string): string {
