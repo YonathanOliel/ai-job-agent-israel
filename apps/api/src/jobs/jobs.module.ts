@@ -14,6 +14,7 @@ import { JobDedupService } from './job-dedup.service';
 import { JobIngestionService } from './job-ingestion.service';
 import { JobSemanticDedupService } from './job-semantic-dedup.service';
 import { JobStatsService } from './job-stats.service';
+import { SourceQualityService } from './source-quality.service';
 import { SourceRegistryService } from './source-registry.service';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
@@ -34,6 +35,7 @@ import { TelegramJobSource } from './telegram-job.source';
     JobSemanticDedupService,
     JobStatsService,
     SourceRegistryService,
+    SourceQualityService,
     CompanyRegistryService,
     AtsDetectionService,
     IngestionQueueService,

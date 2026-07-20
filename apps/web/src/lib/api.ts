@@ -18,6 +18,7 @@ import type {
   SavedSearch,
   SavedSearchFilters,
   SemanticDedupResult,
+  SourceQualityReport,
 } from './api-types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
@@ -172,6 +173,9 @@ export const api = {
     request<void>(`/saved-searches/${id}`, { method: 'DELETE', token }),
 
   getAdminOverview: (token: string) => request<AdminOverview>('/admin/overview', { token }),
+
+  getSourceQuality: (token: string) =>
+    request<SourceQualityReport>('/jobs/source-quality', { token }),
 
   listAdminSessions: (token: string) => request<AdminSession[]>('/admin/sessions', { token }),
 

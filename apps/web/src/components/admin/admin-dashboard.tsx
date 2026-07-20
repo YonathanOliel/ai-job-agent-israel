@@ -31,6 +31,7 @@ import type {
   AuditAction,
   EmbeddingBackfillResult,
   SemanticDedupResult,
+  SourceQuality,
 } from '@/lib/api-types';
 import { formatDate } from '@/lib/utils';
 
@@ -53,6 +54,7 @@ export function AdminDashboard({ token }: { token: string }) {
   const [data, setData] = useState<AdminOverview | null>(null);
   const [sessions, setSessions] = useState<AdminSession[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [sourceQuality, setSourceQuality] = useState<SourceQuality[]>([]);
   const [revoking, setRevoking] = useState<string | null>(null);
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [embedding, setEmbedding] = useState(false);
@@ -74,6 +76,12 @@ export function AdminDashboard({ token }: { token: string }) {
       setData(overview);
       setSessions(sess);
       setUsers(userList.items);
+      try {
+        const quality = await api.getSourceQuality(token);
+        setSourceQuality(quality.sources);
+      } catch {
+        setSourceQuality([]);
+      }
     } catch {
       setError('טעינת נתוני הניהול נכשלה.');
     } finally {
@@ -273,6 +281,9 @@ export function AdminDashboard({ token }: { token: string }) {
         onDedup={runDedup}
       />
 
+      {/* Source quality ranking */}
+      <SourceQualityCard sources={sourceQuality} />
+
       {/* Active sessions */}
       <SessionsCard sessions={sessions} revoking={revoking} onRevoke={revoke} />
 
@@ -323,6 +334,62 @@ const ASSIGNABLE_ROLES: Array<{ value: AdminUser['role']; label: string }> = [
   { value: 'SUPPORT', label: 'תמיכה' },
   { value: 'ADMIN', label: 'מנהל' },
 ];
+
+function SourceQualityCard({ sources }: { sources: SourceQuality[] }) {
+  if (sources.length === 0) {
+    return null;
+  }
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>איכות מקורות איסוף</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <p className="text-sm text-muted-foreground">
+          ציון משוקלל לכל מקור: אמינות, רלוונטיות לישראל, איכות, טריות ושיעור כפילויות נמוך. מסייע
+          להחליט היכן להשקיע משאבי איסוף.
+        </p>
+        {sources.map((s) => (
+          <div key={s.key} className="flex flex-col gap-1.5 rounded-lg border border-border/70 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{s.key}</span>
+                <Badge variant="outline">{s.type}</Badge>
+              </div>
+              <span className="text-lg font-semibold tabular-nums">{s.scores.overall}</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${s.scores.overall}%` }}
+              />
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <span>
+                אמינות <b className="text-foreground">{s.scores.trust}</b>
+              </span>
+              <span>
+                ישראל <b className="text-foreground">{s.scores.israel}</b>
+              </span>
+              <span>
+                איכות <b className="text-foreground">{s.scores.quality}</b>
+              </span>
+              <span>
+                טריות <b className="text-foreground">{s.scores.freshness}</b>
+              </span>
+              <span>
+                ייחודיות <b className="text-foreground">{s.scores.dedup}</b>
+              </span>
+              <span>
+                {s.activeJobs} פעילות · {s.israelJobs} בישראל
+              </span>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
 
 function EmbeddingCard({
   embedding,

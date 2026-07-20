@@ -21,6 +21,7 @@ import { JobIngestionService, type IngestionResult } from './job-ingestion.servi
 import { JobSemanticDedupService, type SemanticDedupResult } from './job-semantic-dedup.service';
 import { JobStatsService, type JobStats } from './job-stats.service';
 import { JobsService, type PaginatedJobs } from './jobs.service';
+import { SourceQualityService, type SourceQualityReport } from './source-quality.service';
 import { SourceRegistryService } from './source-registry.service';
 
 @Controller('jobs')
@@ -33,6 +34,7 @@ export class JobsController {
     private readonly semanticDedup: JobSemanticDedupService,
     private readonly stats: JobStatsService,
     private readonly registry: SourceRegistryService,
+    private readonly sourceQuality: SourceQualityService,
     private readonly discovery: AtsDetectionService,
     private readonly embeddings: EmbeddingService,
   ) {}
@@ -52,6 +54,12 @@ export class JobsController {
   @Get('sources')
   getSources(): Promise<Source[]> {
     return this.registry.list();
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Get('source-quality')
+  getSourceQuality(): Promise<SourceQualityReport> {
+    return this.sourceQuality.compute();
   }
 
   @Get(':id')

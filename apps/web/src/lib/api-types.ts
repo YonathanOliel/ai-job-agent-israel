@@ -221,3 +221,29 @@ export interface SemanticDedupResult {
   duplicates: number;
   updated: number;
 }
+
+export interface SourceQualityScores {
+  trust: number;
+  israel: number;
+  quality: number;
+  freshness: number;
+  dedup: number;
+  overall: number;
+}
+
+export interface SourceQuality {
+  key: string;
+  type: string;
+  activeJobs: number;
+  duplicateJobs: number;
+  israelJobs: number;
+  freshJobs: number;
+  avgQualityScore: number;
+  lastStatus: string | null;
+  scores: SourceQualityScores;
+}
+
+export interface SourceQualityReport {
+  sources: SourceQuality[];
+  generatedAt: string;
+}
