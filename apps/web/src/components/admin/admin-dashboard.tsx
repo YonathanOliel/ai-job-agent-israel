@@ -23,7 +23,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
-import type { AdminOverview, AdminSession, AdminUser, AuditAction } from '@/lib/api-types';
+import type {
+  AdminOverview,
+  AdminSession,
+  AdminUser,
+  AuditAction,
+  EmbeddingBackfillResult,
+} from '@/lib/api-types';
 import { formatDate } from '@/lib/utils';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -47,6 +53,8 @@ export function AdminDashboard({ token }: { token: string }) {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [revoking, setRevoking] = useState<string | null>(null);
   const [changingRole, setChangingRole] = useState<string | null>(null);
+  const [embedding, setEmbedding] = useState(false);
+  const [embedResult, setEmbedResult] = useState<EmbeddingBackfillResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,6 +98,16 @@ export function AdminDashboard({ token }: { token: string }) {
       await load();
     } finally {
       setChangingRole(null);
+    }
+  };
+
+  const runEmbedding = async () => {
+    setEmbedding(true);
+    try {
+      const result = await api.embedAllJobs(token);
+      setEmbedResult(result);
+    } finally {
+      setEmbedding(false);
     }
   };
 
@@ -227,6 +245,14 @@ export function AdminDashboard({ token }: { token: string }) {
         </Card>
       </div>
 
+      {/* Semantic matching engine */}
+      <EmbeddingCard
+        embedding={embedding}
+        result={embedResult}
+        activeJobs={activeJobs}
+        onRun={runEmbedding}
+      />
+
       {/* Active sessions */}
       <SessionsCard sessions={sessions} revoking={revoking} onRevoke={revoke} />
 
@@ -277,6 +303,50 @@ const ASSIGNABLE_ROLES: Array<{ value: AdminUser['role']; label: string }> = [
   { value: 'SUPPORT', label: 'תמיכה' },
   { value: 'ADMIN', label: 'מנהל' },
 ];
+
+function EmbeddingCard({
+  embedding,
+  result,
+  activeJobs,
+  onRun,
+}: {
+  embedding: boolean;
+  result: EmbeddingBackfillResult | null;
+  activeJobs: number;
+  onRun: () => void;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>מנוע ההתאמה החכם (AI)</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <p className="text-sm text-muted-foreground">
+          בניית וקטורי הטמעה לכל {activeJobs} המשרות הפעילות והפרופילים, כדי להפעיל התאמה סמנטית
+          ותובנות &quot;למה אני מתאים?&quot;. פעולה חד־פעמית להרצה לאחר הגדרת מפתח ה-AI.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button onClick={onRun} disabled={embedding} className="gap-2">
+            <Sparkles className="size-4" aria-hidden />
+            {embedding ? 'בונה הטמעות…' : 'בנה הטמעות עכשיו'}
+          </Button>
+          {result &&
+            (result.enabled ? (
+              <span className="text-sm text-success">
+                הוטמעו {result.jobs.embedded}/{result.jobs.total} משרות ו-
+                {result.profiles.embedded}/{result.profiles.total} פרופילים.
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <AlertCircle className="size-4 shrink-0" aria-hidden />
+                מנוע ה-AI כבוי — הגדר את המפתח (OPENAI_API_KEY) כדי להפעיל.
+              </span>
+            ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 function UsersCard({
   users,

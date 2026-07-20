@@ -207,3 +207,9 @@ export interface AdminUser {
   role: UserRole;
   createdAt: string;
 }
+
+export interface EmbeddingBackfillResult {
+  enabled: boolean;
+  jobs: { total: number; embedded: number };
+  profiles: { total: number; embedded: number };
+}

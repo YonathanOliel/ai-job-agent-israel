@@ -1,8 +1,16 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { CareerProfile, Job, Prisma } from '@prisma/client';
+import { CareerProfile, Job, JobStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { EMBEDDING_PROVIDER, type EmbeddingProvider } from '../ai/embedding-provider.types';
 import { buildJobEmbeddingText, buildProfileEmbeddingText } from './embedding-text.util';
+
+/** Summary of a full embeddings backfill run. */
+export interface EmbeddingBackfillResult {
+  /** Whether an embedding provider was configured (false ⇒ nothing embedded). */
+  enabled: boolean;
+  jobs: { total: number; embedded: number };
+  profiles: { total: number; embedded: number };
+}
 
 /**
  * Computes and persists pgvector embeddings for jobs and career profiles, and
@@ -26,42 +34,96 @@ export class EmbeddingService {
     return this.provider !== null;
   }
 
-  /** Embeds and persists a job's vector. Best-effort; never throws. */
-  async embedJob(job: Job): Promise<void> {
+  /**
+   * Embeds and persists a job's vector. Best-effort; never throws. Returns
+   * `true` when a vector was persisted, `false` when disabled, the text was
+   * empty, or the attempt failed.
+   */
+  async embedJob(job: Job): Promise<boolean> {
     if (!this.provider) {
-      return;
+      return false;
     }
     try {
       const text = buildJobEmbeddingText(job);
       if (!text.trim()) {
-        return;
+        return false;
       }
       const vector = await this.provider.embed(text);
       await this.prisma.$executeRaw(
         Prisma.sql`UPDATE "jobs" SET embedding = ${this.toVectorLiteral(vector)}::vector WHERE id = ${job.id}::uuid`,
       );
+      return true;
     } catch (error) {
       this.logger.warn(`Failed to embed job ${job.id}: ${(error as Error).message}`);
+      return false;
     }
   }
 
-  /** Embeds and persists a career profile's vector. Best-effort; never throws. */
-  async embedProfile(profile: CareerProfile): Promise<void> {
+  /**
+   * Embeds and persists a career profile's vector. Best-effort; never throws.
+   * Returns `true` when a vector was persisted, `false` otherwise.
+   */
+  async embedProfile(profile: CareerProfile): Promise<boolean> {
     if (!this.provider) {
-      return;
+      return false;
     }
     try {
       const text = buildProfileEmbeddingText(profile);
       if (!text.trim()) {
-        return;
+        return false;
       }
       const vector = await this.provider.embed(text);
       await this.prisma.$executeRaw(
         Prisma.sql`UPDATE "career_profiles" SET embedding = ${this.toVectorLiteral(vector)}::vector WHERE id = ${profile.id}::uuid`,
       );
+      return true;
     } catch (error) {
       this.logger.warn(`Failed to embed career profile ${profile.id}: ${(error as Error).message}`);
+      return false;
     }
+  }
+
+  /**
+   * Backfills embeddings for every active job and every career profile.
+   * Admin-triggered one-off used after configuring a provider so that
+   * semantic matching has vectors to work with. A safe no-op (returns
+   * `enabled: false` with zero counts) when no provider is configured.
+   */
+  async backfillAll(): Promise<EmbeddingBackfillResult> {
+    if (!this.provider) {
+      return {
+        enabled: false,
+        jobs: { total: 0, embedded: 0 },
+        profiles: { total: 0, embedded: 0 },
+      };
+    }
+
+    const jobs = await this.prisma.job.findMany({ where: { status: JobStatus.ACTIVE } });
+    let jobsEmbedded = 0;
+    for (const job of jobs) {
+      if (await this.embedJob(job)) {
+        jobsEmbedded += 1;
+      }
+    }
+
+    const profiles = await this.prisma.careerProfile.findMany();
+    let profilesEmbedded = 0;
+    for (const profile of profiles) {
+      if (await this.embedProfile(profile)) {
+        profilesEmbedded += 1;
+      }
+    }
+
+    this.logger.log(
+      `Embeddings backfill complete: ${jobsEmbedded}/${jobs.length} jobs, ` +
+        `${profilesEmbedded}/${profiles.length} profiles`,
+    );
+
+    return {
+      enabled: true,
+      jobs: { total: jobs.length, embedded: jobsEmbedded },
+      profiles: { total: profiles.length, embedded: profilesEmbedded },
+    };
   }
 
   /**

@@ -26,11 +26,21 @@ const baseProfile = {
 } as unknown as CareerProfile;
 
 describe('EmbeddingService', () => {
-  let prisma: { $executeRaw: jest.Mock; $queryRaw: jest.Mock };
+  let prisma: {
+    $executeRaw: jest.Mock;
+    $queryRaw: jest.Mock;
+    job: { findMany: jest.Mock };
+    careerProfile: { findMany: jest.Mock };
+  };
   let provider: jest.Mocked<EmbeddingProvider>;
 
   beforeEach(() => {
-    prisma = { $executeRaw: jest.fn().mockResolvedValue(1), $queryRaw: jest.fn() };
+    prisma = {
+      $executeRaw: jest.fn().mockResolvedValue(1),
+      $queryRaw: jest.fn(),
+      job: { findMany: jest.fn().mockResolvedValue([]) },
+      careerProfile: { findMany: jest.fn().mockResolvedValue([]) },
+    };
     provider = {
       name: 'openai',
       dimensions: 3,
@@ -49,6 +59,19 @@ describe('EmbeddingService', () => {
 
       expect(prisma.$executeRaw).not.toHaveBeenCalled();
       expect(similarity).toBeNull();
+    });
+
+    it('backfillAll reports disabled with zero counts', async () => {
+      const service = new EmbeddingService(prisma as unknown as PrismaService, null);
+
+      const result = await service.backfillAll();
+
+      expect(result).toEqual({
+        enabled: false,
+        jobs: { total: 0, embedded: 0 },
+        profiles: { total: 0, embedded: 0 },
+      });
+      expect(prisma.job.findMany).not.toHaveBeenCalled();
     });
   });
 
@@ -75,8 +98,36 @@ describe('EmbeddingService', () => {
       provider.embed.mockRejectedValue(new Error('rate limited'));
       const service = new EmbeddingService(prisma as unknown as PrismaService, provider);
 
-      await expect(service.embedJob(baseJob)).resolves.toBeUndefined();
+      await expect(service.embedJob(baseJob)).resolves.toBe(false);
       expect(prisma.$executeRaw).not.toHaveBeenCalled();
+    });
+
+    it('backfillAll embeds every active job and profile and counts successes', async () => {
+      prisma.job.findMany.mockResolvedValue([baseJob, { ...baseJob, id: 'j2' }]);
+      prisma.careerProfile.findMany.mockResolvedValue([baseProfile]);
+      const service = new EmbeddingService(prisma as unknown as PrismaService, provider);
+
+      const result = await service.backfillAll();
+
+      expect(result).toEqual({
+        enabled: true,
+        jobs: { total: 2, embedded: 2 },
+        profiles: { total: 1, embedded: 1 },
+      });
+      expect(prisma.$executeRaw).toHaveBeenCalledTimes(3);
+    });
+
+    it('backfillAll counts only successfully persisted vectors', async () => {
+      prisma.job.findMany.mockResolvedValue([baseJob, { ...baseJob, id: 'j2' }]);
+      prisma.careerProfile.findMany.mockResolvedValue([]);
+      provider.embed
+        .mockResolvedValueOnce([0.1, 0.2, 0.3])
+        .mockRejectedValueOnce(new Error('rate limited'));
+      const service = new EmbeddingService(prisma as unknown as PrismaService, provider);
+
+      const result = await service.backfillAll();
+
+      expect(result.jobs).toEqual({ total: 2, embedded: 1 });
     });
 
     it('returns cosine similarity from the query result', async () => {

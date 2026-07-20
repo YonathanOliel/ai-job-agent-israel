@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { Job, Source, UserRole } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
+import { EmbeddingService, type EmbeddingBackfillResult } from '../embeddings/embedding.service';
 import { AtsDetectionService, type AtsDetection } from './ats-detection.service';
 import { DiscoverDto } from './dto/discover.dto';
 import { JobFiltersDto } from './dto/job-filters.dto';
@@ -31,6 +32,7 @@ export class JobsController {
     private readonly stats: JobStatsService,
     private readonly registry: SourceRegistryService,
     private readonly discovery: AtsDetectionService,
+    private readonly embeddings: EmbeddingService,
   ) {}
 
   @Get()
@@ -74,6 +76,13 @@ export class JobsController {
   @HttpCode(HttpStatus.OK)
   reindex(): Promise<{ indexed: number }> {
     return this.jobs.reindex();
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Post('embed-all')
+  @HttpCode(HttpStatus.OK)
+  embedAll(): Promise<EmbeddingBackfillResult> {
+    return this.embeddings.backfillAll();
   }
 
   @Roles(UserRole.ADMIN)

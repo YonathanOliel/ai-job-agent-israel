@@ -4,6 +4,7 @@ import type {
   AdminUser,
   AuthResult,
   CareerProfile,
+  EmbeddingBackfillResult,
   GenerateMatchesResult,
   Job,
   JobMatch,
@@ -187,4 +188,7 @@ export const api = {
       body: { role },
       token,
     }),
+
+  embedAllJobs: (token: string) =>
+    request<EmbeddingBackfillResult>('/jobs/embed-all', { method: 'POST', token }),
 };
