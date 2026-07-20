@@ -132,6 +132,7 @@ model User {
   auditLogs     AuditLog[]
   orgMemberships OrganizationMembership[]
   jobReferrals  JobReferral[]
+  savedSearches SavedSearch[]
 
   @@map("users")
 }
@@ -332,6 +333,22 @@ model JobReferral {
 
   @@index([userId])
   @@map("job_referrals")
+}
+
+/// A candidate's named, reusable job-search filter (city, technology,
+/// seniority, remote, free text, ...). Stored per user; re-runnable against the
+/// (Israel-only) job pool. The foundation for future job alerts/notifications.
+model SavedSearch {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  filters   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("saved_searches")
 }
 
 /// Registry of ingestion sources with per-run health. Seeded from the enabled

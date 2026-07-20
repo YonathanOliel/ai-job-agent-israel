@@ -13,6 +13,7 @@ import { OrganizationsModule } from './organizations/organizations.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ReferralsModule } from './referrals/referrals.module';
 import { ResumesModule } from './resumes/resumes.module';
+import { SavedSearchesModule } from './saved-searches/saved-searches.module';
 import { SearchModule } from './search/search.module';
 import { SecurityModule } from './security/security.module';
 import { StorageModule } from './storage/storage.module';
@@ -39,6 +40,7 @@ import { StorageModule } from './storage/storage.module';
     MatchingModule,
     OrganizationsModule,
     ReferralsModule,
+    SavedSearchesModule,
     HealthModule,
     AdminModule,
   ],
