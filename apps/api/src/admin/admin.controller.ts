@@ -7,10 +7,17 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
-import { AdminService, type AdminOverview, type AdminSession } from './admin.service';
+import {
+  AdminService,
+  type AdminOverview,
+  type AdminSession,
+  type AdminUserList,
+} from './admin.service';
+import { ListUsersDto } from './dto/list-users.dto';
 import { SetRoleDto } from './dto/set-role.dto';
 
 /**
@@ -30,6 +37,11 @@ export class AdminController {
   @Get('sessions')
   sessions(): Promise<AdminSession[]> {
     return this.admin.listSessions();
+  }
+
+  @Get('users')
+  users(@Query() query: ListUsersDto): Promise<AdminUserList> {
+    return this.admin.listUsers(query);
   }
 
   @Post('sessions/:userId/revoke')

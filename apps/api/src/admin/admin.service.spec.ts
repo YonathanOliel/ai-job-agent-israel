@@ -76,4 +76,37 @@ describe('AdminService', () => {
       data: { revokedAt: expect.any(Date) },
     });
   });
+
+  it('lists users with pagination and search', async () => {
+    const rows = [
+      { id: 'u1', email: 'a@x.com', displayName: null, role: 'CANDIDATE', createdAt: new Date() },
+    ];
+    const prisma = {
+      user: { findMany: jest.fn().mockResolvedValue(rows), count: jest.fn().mockResolvedValue(1) },
+      $transaction: jest.fn().mockImplementation((ops: unknown[]) => Promise.all(ops)),
+    };
+    const service = new AdminService(
+      prisma as unknown as PrismaService,
+      {} as unknown as JobStatsService,
+      {} as unknown as SourceRegistryService,
+      {} as unknown as JobSearchService,
+    );
+
+    const result = await service.listUsers({ search: 'a@x', page: 2, pageSize: 10 });
+
+    expect(result).toEqual({ items: rows, total: 1, page: 2, pageSize: 10 });
+    const args = prisma.user.findMany.mock.calls[0]![0] as {
+      skip: number;
+      take: number;
+      where: unknown;
+    };
+    expect(args.skip).toBe(10);
+    expect(args.take).toBe(10);
+    expect(args.where).toEqual({
+      OR: [
+        { email: { contains: 'a@x', mode: 'insensitive' } },
+        { displayName: { contains: 'a@x', mode: 'insensitive' } },
+      ],
+    });
+  });
 });

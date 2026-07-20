@@ -199,3 +199,11 @@ export interface AdminSession {
   createdAt: string;
   expiresAt: string;
 }
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  displayName: string | null;
+  role: UserRole;
+  createdAt: string;
+}

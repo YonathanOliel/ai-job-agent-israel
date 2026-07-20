@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
-import type { AdminOverview, AdminSession, AuditAction } from '@/lib/api-types';
+import type { AdminOverview, AdminSession, AdminUser, AuditAction } from '@/lib/api-types';
 import { formatDate } from '@/lib/utils';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -44,7 +44,9 @@ const ACTION_LABELS: Record<AuditAction, string> = {
 export function AdminDashboard({ token }: { token: string }) {
   const [data, setData] = useState<AdminOverview | null>(null);
   const [sessions, setSessions] = useState<AdminSession[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [revoking, setRevoking] = useState<string | null>(null);
+  const [changingRole, setChangingRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,12 +54,14 @@ export function AdminDashboard({ token }: { token: string }) {
     setLoading(true);
     setError(null);
     try {
-      const [overview, sess] = await Promise.all([
+      const [overview, sess, userList] = await Promise.all([
         api.getAdminOverview(token),
         api.listAdminSessions(token),
+        api.listAdminUsers(token, { pageSize: 50 }),
       ]);
       setData(overview);
       setSessions(sess);
+      setUsers(userList.items);
     } catch {
       setError('טעינת נתוני הניהול נכשלה.');
     } finally {
@@ -76,6 +80,16 @@ export function AdminDashboard({ token }: { token: string }) {
       await load();
     } finally {
       setRevoking(null);
+    }
+  };
+
+  const changeRole = async (userId: string, role: AdminUser['role']) => {
+    setChangingRole(userId);
+    try {
+      await api.setUserRole(token, userId, role);
+      await load();
+    } finally {
+      setChangingRole(null);
     }
   };
 
@@ -216,6 +230,14 @@ export function AdminDashboard({ token }: { token: string }) {
       {/* Active sessions */}
       <SessionsCard sessions={sessions} revoking={revoking} onRevoke={revoke} />
 
+      {/* User management */}
+      <UsersCard
+        users={users}
+        currentUserEmail={data.recentActivity[0]?.userEmail ?? null}
+        changingRole={changingRole}
+        onChangeRole={changeRole}
+      />
+
       {/* Recent activity */}
       <Card>
         <CardHeader>
@@ -250,6 +272,77 @@ export function AdminDashboard({ token }: { token: string }) {
   );
 }
 
+const ASSIGNABLE_ROLES: Array<{ value: AdminUser['role']; label: string }> = [
+  { value: 'CANDIDATE', label: 'מועמד' },
+  { value: 'SUPPORT', label: 'תמיכה' },
+  { value: 'ADMIN', label: 'מנהל' },
+];
+
+function UsersCard({
+  users,
+  currentUserEmail,
+  changingRole,
+  onChangeRole,
+}: {
+  users: AdminUser[];
+  currentUserEmail: string | null;
+  changingRole: string | null;
+  onChangeRole: (userId: string, role: AdminUser['role']) => void;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>ניהול משתמשים ({users.length})</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+        {users.length === 0 ? (
+          <p className="text-sm text-muted-foreground">אין משתמשים להצגה.</p>
+        ) : (
+          users.map((u) => {
+            const isOwner = u.role === 'SUPER_ADMIN';
+            return (
+              <div
+                key={u.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm"
+              >
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate font-medium">
+                    {u.displayName ?? u.email}
+                    {u.email === currentUserEmail && (
+                      <span className="ms-1.5 text-xs font-normal text-muted-foreground">
+                        (אתה)
+                      </span>
+                    )}
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground ltr-inline">
+                    {u.email}
+                  </span>
+                </div>
+                {isOwner ? (
+                  <Badge variant="default">סופר-אדמין</Badge>
+                ) : (
+                  <select
+                    value={u.role}
+                    disabled={changingRole === u.id}
+                    onChange={(e) => onChangeRole(u.id, e.target.value as AdminUser['role'])}
+                    className="h-9 rounded-lg border border-input bg-card px-2.5 text-sm shadow-xs transition-colors hover:border-input/80 focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 disabled:opacity-50"
+                  >
+                    {ASSIGNABLE_ROLES.map((r) => (
+                      <option key={r.value} value={r.value}>
+                        {r.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            );
+          })
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function SessionsCard({
   sessions,
   revoking,
@@ -259,8 +352,6 @@ function SessionsCard({
   revoking: string | null;
   onRevoke: (userId: string) => void;
 }) {
-  // Group active sessions by user so "revoke" (which clears all of a user's
-  // sessions) maps to one clear action per user.
   const byUser = new Map<string, { email: string; count: number; latest: string }>();
   for (const s of sessions) {
     const entry = byUser.get(s.userId);

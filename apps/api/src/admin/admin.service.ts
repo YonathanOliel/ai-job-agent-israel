@@ -30,6 +30,21 @@ export interface AdminSession {
   expiresAt: Date;
 }
 
+export interface AdminUser {
+  id: string;
+  email: string;
+  displayName: string | null;
+  role: UserRole;
+  createdAt: Date;
+}
+
+export interface AdminUserList {
+  items: AdminUser[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 /**
  * Read model for the Super-Admin console: aggregates users, sessions, auth
  * activity, source health, job stats and system health into one view, and
@@ -146,5 +161,32 @@ export class AdminService {
   async setRole(userId: string, role: UserRole): Promise<{ id: string; role: UserRole }> {
     const user = await this.prisma.user.update({ where: { id: userId }, data: { role } });
     return { id: user.id, role: user.role };
+  }
+
+  /** Paginated user directory with optional email/name search. */
+  async listUsers(params: {
+    search?: string;
+    page: number;
+    pageSize: number;
+  }): Promise<AdminUserList> {
+    const where = params.search
+      ? {
+          OR: [
+            { email: { contains: params.search, mode: 'insensitive' as const } },
+            { displayName: { contains: params.search, mode: 'insensitive' as const } },
+          ],
+        }
+      : {};
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (params.page - 1) * params.pageSize,
+        take: params.pageSize,
+        select: { id: true, email: true, displayName: true, role: true, createdAt: true },
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+    return { items, total, page: params.page, pageSize: params.pageSize };
   }
 }

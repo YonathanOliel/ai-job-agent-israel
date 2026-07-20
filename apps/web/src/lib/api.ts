@@ -1,6 +1,7 @@
 import type {
   AdminOverview,
   AdminSession,
+  AdminUser,
   AuthResult,
   CareerProfile,
   GenerateMatchesResult,
@@ -174,4 +175,16 @@ export const api = {
 
   revokeUserSessions: (token: string, userId: string) =>
     request<{ revoked: number }>(`/admin/sessions/${userId}/revoke`, { method: 'POST', token }),
+
+  listAdminUsers: (
+    token: string,
+    params: { search?: string; page?: number; pageSize?: number } = {},
+  ) => request<Paginated<AdminUser>>(`/admin/users${toQuery({ ...params })}`, { token }),
+
+  setUserRole: (token: string, userId: string, role: AdminUser['role']) =>
+    request<{ id: string; role: string }>(`/admin/users/${userId}/role`, {
+      method: 'POST',
+      body: { role },
+      token,
+    }),
 };
