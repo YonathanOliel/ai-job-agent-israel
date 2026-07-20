@@ -59,7 +59,8 @@ describe('JobsService', () => {
     const where = (prisma.job.findMany.mock.calls[0]![0] as { where: Record<string, unknown> })
       .where;
     expect(where.city).toEqual({ contains: 'Tel Aviv', mode: 'insensitive' });
-    expect(where.technologies).toEqual({ has: 'typescript' });
+    // The technology graph expands "typescript" to its alias/ecosystem set.
+    expect(where.technologies).toEqual({ hasSome: expect.arrayContaining(['typescript']) });
     expect(where.seniority).toBe(SeniorityLevel.SENIOR);
     expect(Array.isArray(where.OR)).toBe(true);
   });

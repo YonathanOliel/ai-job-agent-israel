@@ -23,6 +23,7 @@ import { JobStatsService, type JobStats } from './job-stats.service';
 import { JobsService, type PaginatedJobs } from './jobs.service';
 import { SourceQualityService, type SourceQualityReport } from './source-quality.service';
 import { SourceRegistryService } from './source-registry.service';
+import { technologyGraph } from './technology-graph';
 
 @Controller('jobs')
 export class JobsController {
@@ -42,6 +43,11 @@ export class JobsController {
   @Get()
   list(@Query() filters: JobFiltersDto): Promise<PaginatedJobs> {
     return this.jobs.list(filters);
+  }
+
+  @Get('tech-graph')
+  getTechGraph(): Array<{ technology: string; related: string[] }> {
+    return technologyGraph();
   }
 
   @Roles(UserRole.ADMIN)

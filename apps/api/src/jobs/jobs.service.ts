@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JobSearchService } from '../search/job-search.service';
 import { JobFiltersDto } from './dto/job-filters.dto';
 import { israelJobWhere } from './israel-filter';
+import { expandTechnology } from './technology-graph';
 
 export interface PaginatedJobs {
   items: Job[];
@@ -100,13 +101,16 @@ export class JobsService {
       where.employmentType = filters.employmentType;
     }
     if (filters.technology) {
-      where.technologies = { has: filters.technology.toLowerCase() };
+      // Expand via the technology graph so e.g. "kubernetes" also matches jobs
+      // tagged only with helm / argocd / istio.
+      where.technologies = { hasSome: expandTechnology(filters.technology) };
     }
     if (filters.search) {
       where.OR = [
         { title: { contains: filters.search, mode: 'insensitive' } },
         { company: { contains: filters.search, mode: 'insensitive' } },
         { description: { contains: filters.search, mode: 'insensitive' } },
+        { technologies: { hasSome: expandTechnology(filters.search) } },
       ];
     }
     return where;
