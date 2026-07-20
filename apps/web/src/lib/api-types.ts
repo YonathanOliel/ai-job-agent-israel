@@ -189,3 +189,13 @@ export interface AdminOverview {
   };
   system: { database: 'up' | 'down'; search: 'up' | 'down' | 'disabled' };
 }
+
+export interface AdminSession {
+  id: string;
+  userId: string;
+  userEmail: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+  expiresAt: string;
+}

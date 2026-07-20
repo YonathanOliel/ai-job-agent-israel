@@ -22,6 +22,7 @@ export interface AdminOverview {
 
 export interface AdminSession {
   id: string;
+  userId: string;
   userEmail: string;
   ipAddress: string | null;
   userAgent: string | null;
@@ -123,6 +124,7 @@ export class AdminService {
     });
     return tokens.map((token) => ({
       id: token.id,
+      userId: token.userId,
       userEmail: token.user.email,
       ipAddress: token.ipAddress,
       userAgent: token.userAgent,

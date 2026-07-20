@@ -1,5 +1,6 @@
 import type {
   AdminOverview,
+  AdminSession,
   AuthResult,
   CareerProfile,
   GenerateMatchesResult,
@@ -168,4 +169,9 @@ export const api = {
     request<void>(`/saved-searches/${id}`, { method: 'DELETE', token }),
 
   getAdminOverview: (token: string) => request<AdminOverview>('/admin/overview', { token }),
+
+  listAdminSessions: (token: string) => request<AdminSession[]>('/admin/sessions', { token }),
+
+  revokeUserSessions: (token: string, userId: string) =>
+    request<{ revoked: number }>(`/admin/sessions/${userId}/revoke`, { method: 'POST', token }),
 };

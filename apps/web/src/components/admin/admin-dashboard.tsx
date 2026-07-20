@@ -8,7 +8,9 @@ import {
   CheckCircle2,
   Database,
   Gauge,
+  LogOut,
   MapPin,
+  Monitor,
   Search as SearchIcon,
   Sparkles,
   UserPlus,
@@ -17,10 +19,11 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
-import type { AdminOverview, AuditAction } from '@/lib/api-types';
+import type { AdminOverview, AdminSession, AuditAction } from '@/lib/api-types';
 import { formatDate } from '@/lib/utils';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -40,6 +43,8 @@ const ACTION_LABELS: Record<AuditAction, string> = {
 
 export function AdminDashboard({ token }: { token: string }) {
   const [data, setData] = useState<AdminOverview | null>(null);
+  const [sessions, setSessions] = useState<AdminSession[]>([]);
+  const [revoking, setRevoking] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +52,12 @@ export function AdminDashboard({ token }: { token: string }) {
     setLoading(true);
     setError(null);
     try {
-      setData(await api.getAdminOverview(token));
+      const [overview, sess] = await Promise.all([
+        api.getAdminOverview(token),
+        api.listAdminSessions(token),
+      ]);
+      setData(overview);
+      setSessions(sess);
     } catch {
       setError('טעינת נתוני הניהול נכשלה.');
     } finally {
@@ -58,6 +68,16 @@ export function AdminDashboard({ token }: { token: string }) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const revoke = async (userId: string) => {
+    setRevoking(userId);
+    try {
+      await api.revokeUserSessions(token, userId);
+      await load();
+    } finally {
+      setRevoking(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -193,6 +213,9 @@ export function AdminDashboard({ token }: { token: string }) {
         </Card>
       </div>
 
+      {/* Active sessions */}
+      <SessionsCard sessions={sessions} revoking={revoking} onRevoke={revoke} />
+
       {/* Recent activity */}
       <Card>
         <CardHeader>
@@ -224,6 +247,65 @@ export function AdminDashboard({ token }: { token: string }) {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function SessionsCard({
+  sessions,
+  revoking,
+  onRevoke,
+}: {
+  sessions: AdminSession[];
+  revoking: string | null;
+  onRevoke: (userId: string) => void;
+}) {
+  // Group active sessions by user so "revoke" (which clears all of a user's
+  // sessions) maps to one clear action per user.
+  const byUser = new Map<string, { email: string; count: number; latest: string }>();
+  for (const s of sessions) {
+    const entry = byUser.get(s.userId);
+    if (entry) {
+      entry.count += 1;
+    } else {
+      byUser.set(s.userId, { email: s.userEmail, count: 1, latest: s.createdAt });
+    }
+  }
+  const users = [...byUser.entries()];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>סשנים פעילים ({sessions.length})</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+        {users.length === 0 ? (
+          <p className="text-sm text-muted-foreground">אין סשנים פעילים.</p>
+        ) : (
+          users.map(([userId, u]) => (
+            <div
+              key={userId}
+              className="flex items-center justify-between gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm"
+            >
+              <div className="flex min-w-0 items-center gap-2.5">
+                <Monitor className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                <span className="truncate font-medium">{u.email}</span>
+                <Badge variant="secondary">{u.count} מכשירים</Badge>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                loading={revoking === userId}
+                onClick={() => onRevoke(userId)}
+                className="shrink-0 text-destructive hover:border-destructive/40 hover:text-destructive"
+              >
+                <LogOut className="size-4" aria-hidden />
+                ניתוק
+              </Button>
+            </div>
+          ))
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
