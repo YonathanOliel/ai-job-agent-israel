@@ -26,6 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
 import type {
   AdminOverview,
+  AdminAuditEntry,
   AdminSession,
   AdminUser,
   AuditAction,
@@ -34,6 +35,7 @@ import type {
   SourceQuality,
 } from '@/lib/api-types';
 import { formatDate } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 const ROLE_LABELS: Record<string, string> = {
   CANDIDATE: 'מועמדים',
@@ -325,6 +327,9 @@ export function AdminDashboard({ token }: { token: string }) {
           )}
         </CardContent>
       </Card>
+
+      {/* Audit explorer */}
+      <AuditExplorerCard token={token} />
     </div>
   );
 }
@@ -334,6 +339,143 @@ const ASSIGNABLE_ROLES: Array<{ value: AdminUser['role']; label: string }> = [
   { value: 'SUPPORT', label: 'תמיכה' },
   { value: 'ADMIN', label: 'מנהל' },
 ];
+
+const AUDIT_FILTERS: Array<{ value: AuditAction | 'ALL'; label: string }> = [
+  { value: 'ALL', label: 'הכול' },
+  { value: 'LOGIN_SUCCEEDED', label: 'התחברות' },
+  { value: 'LOGIN_FAILED', label: 'התחברות נכשלה' },
+  { value: 'USER_REGISTERED', label: 'הרשמה' },
+  { value: 'TOKEN_REFRESHED', label: 'רענון סשן' },
+  { value: 'LOGOUT', label: 'התנתקות' },
+];
+
+const AUDIT_PAGE_SIZE = 15;
+
+function AuditExplorerCard({ token }: { token: string }) {
+  const [action, setAction] = useState<AuditAction | 'ALL'>('ALL');
+  const [page, setPage] = useState(1);
+  const [entries, setEntries] = useState<AdminAuditEntry[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    api
+      .listAdminAudit(token, {
+        action: action === 'ALL' ? undefined : action,
+        page,
+        pageSize: AUDIT_PAGE_SIZE,
+      })
+      .then((res) => {
+        if (cancelled) return;
+        setEntries(res.items);
+        setTotal(res.total);
+      })
+      .catch(() => {
+        if (!cancelled) setEntries([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, action, page]);
+
+  const totalPages = Math.max(1, Math.ceil(total / AUDIT_PAGE_SIZE));
+
+  const changeFilter = (value: AuditAction | 'ALL') => {
+    setAction(value);
+    setPage(1);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>חוקר יומן ביקורת</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <div className="flex flex-wrap gap-2">
+          {AUDIT_FILTERS.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => changeFilter(f.value)}
+              className={cn(
+                'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                action === f.value
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border text-muted-foreground hover:border-input',
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        {loading ? (
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 rounded-lg" />
+            ))}
+          </div>
+        ) : entries.length === 0 ? (
+          <p className="py-2 text-sm text-muted-foreground">אין רשומות להצגה.</p>
+        ) : (
+          <div className="flex flex-col divide-y divide-border/60">
+            {entries.map((e) => (
+              <div key={e.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  {e.action === 'LOGIN_FAILED' ? (
+                    <XCircle className="size-4 shrink-0 text-destructive" aria-hidden />
+                  ) : e.action === 'USER_REGISTERED' ? (
+                    <UserPlus className="size-4 shrink-0 text-primary" aria-hidden />
+                  ) : (
+                    <CheckCircle2 className="size-4 shrink-0 text-success" aria-hidden />
+                  )}
+                  <span className="shrink-0 font-medium">
+                    {ACTION_LABELS[e.action] ?? e.action}
+                  </span>
+                  <span className="truncate text-muted-foreground">{e.userEmail ?? '—'}</span>
+                  {e.ipAddress && (
+                    <span className="ltr-inline shrink-0 text-xs text-muted-foreground">
+                      {e.ipAddress}
+                    </span>
+                  )}
+                </div>
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {formatDate(e.createdAt)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-3 border-t pt-3 text-sm">
+          <span className="text-muted-foreground">
+            {total} רשומות · עמוד {page}/{totalPages}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1 || loading}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              הקודם
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages || loading}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              הבא
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 function SourceQualityCard({ sources }: { sources: SourceQuality[] }) {
   if (sources.length === 0) {

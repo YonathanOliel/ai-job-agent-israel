@@ -158,6 +158,15 @@ export type AuditAction =
   | 'TOKEN_REFRESHED'
   | 'LOGOUT';
 
+export interface AdminAuditEntry {
+  id: string;
+  action: AuditAction;
+  userEmail: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
 export interface AdminSourceRow {
   key: string;
   type: string;

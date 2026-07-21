@@ -109,4 +109,59 @@ describe('AdminService', () => {
       ],
     });
   });
+
+  it('lists audit entries with pagination and an action filter', async () => {
+    const entries = [
+      {
+        id: 'a1',
+        action: 'LOGIN_SUCCEEDED',
+        ipAddress: '1.2.3.4',
+        userAgent: 'jest',
+        createdAt: new Date('2026-07-20'),
+        user: { email: 'a@x.com' },
+      },
+    ];
+    const prisma = {
+      auditLog: {
+        findMany: jest.fn().mockResolvedValue(entries),
+        count: jest.fn().mockResolvedValue(1),
+      },
+      $transaction: jest.fn().mockImplementation((ops: unknown[]) => Promise.all(ops)),
+    };
+    const service = new AdminService(
+      prisma as unknown as PrismaService,
+      {} as unknown as JobStatsService,
+      {} as unknown as SourceRegistryService,
+      {} as unknown as JobSearchService,
+    );
+
+    const result = await service.listAudit({
+      action: 'LOGIN_SUCCEEDED' as never,
+      page: 2,
+      pageSize: 10,
+    });
+
+    expect(result).toEqual({
+      items: [
+        {
+          id: 'a1',
+          action: 'LOGIN_SUCCEEDED',
+          userEmail: 'a@x.com',
+          ipAddress: '1.2.3.4',
+          userAgent: 'jest',
+          createdAt: entries[0]!.createdAt,
+        },
+      ],
+      total: 1,
+      page: 2,
+      pageSize: 10,
+    });
+    const args = prisma.auditLog.findMany.mock.calls[0]![0] as {
+      skip: number;
+      take: number;
+      where: unknown;
+    };
+    expect(args.skip).toBe(10);
+    expect(args.where).toEqual({ action: 'LOGIN_SUCCEEDED' });
+  });
 });

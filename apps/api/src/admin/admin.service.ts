@@ -45,6 +45,22 @@ export interface AdminUserList {
   pageSize: number;
 }
 
+export interface AdminAuditEntry {
+  id: string;
+  action: AuditAction;
+  userEmail: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: Date;
+}
+
+export interface AdminAuditList {
+  items: AdminAuditEntry[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 /**
  * Read model for the Super-Admin console: aggregates users, sessions, auth
  * activity, source health, job stats and system health into one view, and
@@ -188,5 +204,37 @@ export class AdminService {
       this.prisma.user.count({ where }),
     ]);
     return { items, total, page: params.page, pageSize: params.pageSize };
+  }
+
+  /** Paginated audit-log explorer with an optional action filter. */
+  async listAudit(params: {
+    action?: AuditAction;
+    page: number;
+    pageSize: number;
+  }): Promise<AdminAuditList> {
+    const where = params.action ? { action: params.action } : {};
+    const [entries, total] = await this.prisma.$transaction([
+      this.prisma.auditLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (params.page - 1) * params.pageSize,
+        take: params.pageSize,
+        include: { user: { select: { email: true } } },
+      }),
+      this.prisma.auditLog.count({ where }),
+    ]);
+    return {
+      items: entries.map((entry) => ({
+        id: entry.id,
+        action: entry.action,
+        userEmail: entry.user?.email ?? null,
+        ipAddress: entry.ipAddress,
+        userAgent: entry.userAgent,
+        createdAt: entry.createdAt,
+      })),
+      total,
+      page: params.page,
+      pageSize: params.pageSize,
+    };
   }
 }

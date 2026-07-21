@@ -1,7 +1,9 @@
 import type {
   AdminOverview,
+  AdminAuditEntry,
   AdminSession,
   AdminUser,
+  AuditAction,
   AuthResult,
   CareerProfile,
   EmbeddingBackfillResult,
@@ -186,6 +188,11 @@ export const api = {
     token: string,
     params: { search?: string; page?: number; pageSize?: number } = {},
   ) => request<Paginated<AdminUser>>(`/admin/users${toQuery({ ...params })}`, { token }),
+
+  listAdminAudit: (
+    token: string,
+    params: { action?: AuditAction; page?: number; pageSize?: number } = {},
+  ) => request<Paginated<AdminAuditEntry>>(`/admin/audit${toQuery({ ...params })}`, { token }),
 
   setUserRole: (token: string, userId: string, role: AdminUser['role']) =>
     request<{ id: string; role: string }>(`/admin/users/${userId}/role`, {

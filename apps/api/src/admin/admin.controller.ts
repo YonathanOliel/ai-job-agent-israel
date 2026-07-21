@@ -13,10 +13,12 @@ import { UserRole } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import {
   AdminService,
+  type AdminAuditList,
   type AdminOverview,
   type AdminSession,
   type AdminUserList,
 } from './admin.service';
+import { ListAuditDto } from './dto/list-audit.dto';
 import { ListUsersDto } from './dto/list-users.dto';
 import { SetRoleDto } from './dto/set-role.dto';
 
@@ -42,6 +44,11 @@ export class AdminController {
   @Get('users')
   users(@Query() query: ListUsersDto): Promise<AdminUserList> {
     return this.admin.listUsers(query);
+  }
+
+  @Get('audit')
+  audit(@Query() query: ListAuditDto): Promise<AdminAuditList> {
+    return this.admin.listAudit(query);
   }
 
   @Post('sessions/:userId/revoke')
